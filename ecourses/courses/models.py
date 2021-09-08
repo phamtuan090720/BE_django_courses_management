@@ -6,21 +6,23 @@ from django.utils.html import mark_safe
 
 class User(AbstractUser):
     avatar = models.ImageField(upload_to='static/uploads/%Y/%m',null=True)
+
 class Job(models.Model):
     name_job = models.CharField(max_length=255)
     def __str__(self):
         return self.name_job
+
 class Skill(models.Model):
     name_skill = models.CharField(max_length=255)
     def __str__(self):
         return self.name_skill
 class Teacher(models.Model):
-    user_id = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
+    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
     activeTeacher = models.BooleanField(default=False)
     skills = models.ManyToManyField(Skill,blank=True,related_name='teacher')
     job = models.ForeignKey(Job,on_delete=models.SET_NULL,null=True)
     def __str__(self):
-        return str(self.user_id)
+        return str(self.user)
 
 
 class Follow(models.Model):
@@ -56,7 +58,7 @@ class Course(ModelBase):
     description = models.TextField(null=True,default="Chưa có mô tả Khóa Học")
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True)
     tags = models.ManyToManyField('Tag', blank=True,related_name='course')
-    teacher_id = models.ForeignKey(Teacher,on_delete=models.CASCADE,null=False)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=False)
     image = models.ImageField(upload_to='courses/%Y/%m/',null=True, blank=True)
     students = models.ManyToManyField('User',blank=True,related_name='course')
     def __str__(self):
@@ -98,14 +100,14 @@ class HomeWork(models.Model):
     def __str__(self):
         return self.subject
 class GroupChat(models.Model):
-    id_course = models.OneToOneField(Course,on_delete=models.CASCADE,primary_key=True)
+    course = models.OneToOneField(Course,on_delete=models.CASCADE,primary_key=True)
     name_group = models.CharField(max_length=255,null=False)
     def __str__(self):
         return self.name_group
 class Message(models.Model):
-    id_user = models.ForeignKey(User,on_delete=models.CASCADE,null=False)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,null=False)
     group_chat = models.ForeignKey(GroupChat,on_delete=models.CASCADE,null=False)
     mess = models.TextField()
     date_post = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return str(self.id_user) + ' Said ' + str(self.mess) + ' in group chat ' + str(self.group_chat) + ' at time: ' + str(self.date_post)
+        return str(self.user) + ' Said ' + str(self.mess) + ' in group chat ' + str(self.group_chat) + ' at time: ' + str(self.date_post)

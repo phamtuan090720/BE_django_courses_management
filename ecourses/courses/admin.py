@@ -1,11 +1,12 @@
 from django.contrib import admin
-from .models import Category,User,Course,Lesson,Tag,Teacher,HomeWork,File,Video,Follow,Skill,Job,GroupChat,Message
+from .models import *
 # Register your models here.
 # class CoursesAdmin(admin.ModelAdmin):
 #     list_display = ['id', 'subject','created_date','update_date']
 #     list_filter = ['subject', 'created_date']
 #     search_fields = ['subject', 'course__subject']
 #     readonly_fields = ['image_tag']
+# admin.site.register(CoursesAdmin)
 admin.site.register(Category)
 admin.site.register(User)
 admin.site.register(Course)

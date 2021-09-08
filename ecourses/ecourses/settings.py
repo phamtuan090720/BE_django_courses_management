@@ -39,11 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'courses.apps.CoursesConfig',
     'rest_framework',
+    'oauth2_provider',
+    'debug_toolbar',
+    'drf_yasg',
 
 ]
 REST_FRAMEWORK = {
 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
-'PAGE_SIZE': '3'
+'PAGE_SIZE': '3',
+'DEFAULT_AUTHENTICATION_CLASSES': [
+    'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ]
 }
 
 MIDDLEWARE = [
@@ -54,8 +60,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #tat truoc khi trien khai len he thong
 ]
-
+INTERNAL_IPS = [
+'127.0.0.1'
+]
 ROOT_URLCONF = 'ecourses.urls'
 
 TEMPLATES = [
@@ -85,7 +94,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'testdb',
         'USER':'root',
-        'PASSWORD':'123456',
+        'PASSWORD':'12345',
         'HOST':''
     }
 }
