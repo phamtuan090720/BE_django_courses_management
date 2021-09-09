@@ -92,7 +92,7 @@ WSGI_APPLICATION = 'ecourses.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testdb',
+        'NAME': 'ecoursedb',
         'USER':'root',
         'PASSWORD':'12345',
         'HOST':''
