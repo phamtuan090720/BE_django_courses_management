@@ -58,11 +58,22 @@ class Course(ModelBase):
     description = models.TextField(null=True,default="Chưa có mô tả Khóa Học")
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True)
     tags = models.ManyToManyField('Tag', blank=True,related_name='course')
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=False)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=False, related_name='course')
+    fee = models.CharField(default='Free', null=True, max_length=10) #free or not
+    is_public = models.BooleanField(default=True, null=False) #public or private
     image = models.ImageField(upload_to='courses/%Y/%m/',null=True, blank=True)
-    students = models.ManyToManyField('User',blank=True,related_name='course')
+    # students = models.ManyToManyField('User',blank=True,related_name='course')
     def __str__(self):
         return self.name_course
+
+class Student_Course(models.Model):
+    class Meta:
+        unique_together = ('student', 'course')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='course_join')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=False, related_name='student_join')
+    join_date = models.DateTimeField(auto_now_add=True)
+    rate = models.IntegerField(null=True, blank=True)
+    review = models.TextField(blank=True, null=True)
 
 class Lesson(ModelBase):
     class Meta:
