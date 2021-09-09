@@ -1,4 +1,5 @@
-
+from django.db.models import Avg
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
 
@@ -32,19 +33,68 @@ class CategorySerializer(ModelSerializer):
 
 class TagSerializer(ModelSerializer):
     class Meta:
-        model = Tag;
+        model = Tag
         fields = ['id', 'name']
 
-class CoursesSerializer(ModelSerializer):
-    tags = TagSerializer(many=True)
+class JoinSerializer(ModelSerializer):
     class Meta:
-        model = Course
-        fields = ['id', 'name_course', 'description', 'image','created_date','updated_date','category', 'tags', 'active', 'teacher_id']
+        model = Student_Course
+        fields = ['id', 'student', 'course', 'join_date', 'rate', 'review']
 
 class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
+
+class Student_CourseSerializer(ModelSerializer):
+    class Meta:
+        model = Student_Course
+        fields = ['student','rate', 'review']
+
+
+
+class TeacherField(serializers.RelatedField):
+    def to_representation(self, value):
+        return {'id': value.user.id,
+                'username': value.user.username}
+class LessonField(ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [ 'subject', 'image']
+
+class CourseSerializer(ModelSerializer):
+    category = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    teacher = TeacherField(read_only=True)
+    rate = serializers.SerializerMethodField('rate_avg')
+    def rate_avg(self, course):
+        point = course.student_join.aggregate(Avg('rate')) # trung bình điểm rating
+        return point['rate__avg']
+    class Meta:
+        model = Course
+        fields = ['id', 'name_course','category', 'description','image', 'created_date', 'active', 'fee',
+                  'is_public', 'teacher', 'rate']
+
+
+class CoursesItemSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField( read_only=True, slug_field='name')
+    tags = TagSerializer(many=True)
+    lessons = LessonField(many=True)
+    teacher = TeacherField( read_only= True)
+    student = serializers.SerializerMethodField('countStudent')
+    rate = serializers.SerializerMethodField('rate_avg')
+    student_join = Student_CourseSerializer(many=True)
+    def rate_avg(self, course):
+        point = course.student_join.aggregate(Avg('rate')) # trung bình điểm rating
+        return point['rate__avg']
+    def countStudent(self, course):
+        return course.student_join.count()
+
+
+    class Meta:
+        model = Course
+        fields = ['id', 'name_course','category', 'description','image', 'created_date', 'active', 'fee',
+                  'is_public', 'updated_date', 'lessons', 'tags', 'teacher', 'student', 'rate', 'student_join']
+
 
 
 class HomeWorkSerializer(ModelSerializer):

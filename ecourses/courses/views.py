@@ -8,16 +8,6 @@ from rest_framework.parsers import MultiPartParser
 from .models import Course
 from .serializers import *
 
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     # permission_classes = [permissions.IsAuthenticated]
-#
-#     def get_permissions(self):
-#         if(self.action=='list'):
-#             return [permissions.AllowAny()]
-#         else:
-#             return [permissions.IsAuthenticated()]
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
@@ -44,7 +34,6 @@ class TeacherViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         if(self.action=='list'):
@@ -52,9 +41,15 @@ class TagViewSet(viewsets.ModelViewSet):
         else:
             return [permissions.IsAuthenticated()]
 
-class CoursesViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.filter(active=True)
-    serializer_class = CoursesSerializer
+class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Course.objects.all()
+    query = Course.objects
+    serializer_class = CourseSerializer
+
+    def retrieve(self, request, pk=None):
+        queryset = self.query.get(pk=pk)
+        serializer = CoursesItemSerializer(queryset)
+        return Response(serializer.data)
 
     @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses')
     def hide_courses(self, request, pk=None):
@@ -64,12 +59,7 @@ class CoursesViewSet(viewsets.ModelViewSet):
             c.save()
         except Course.DoesNotExit:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_200_OK, data=CoursesSerializer(c,context={'request':request}).data)
-    def get_permissions(self):
-        if(self.action=='list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
+        return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -161,6 +151,15 @@ class GroupChatViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessSerializer
+
+    def get_permissions(self):
+        if (self.action == 'list'):
+            return [permissions.AllowAny()]
+        else:
+            return [permissions.IsAuthenticated()]
+class JoinViewSet(viewsets.ModelViewSet):
+    queryset = Student_Course.objects.all()
+    serializer_class = JoinSerializer
 
     def get_permissions(self):
         if (self.action == 'list'):
