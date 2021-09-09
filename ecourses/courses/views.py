@@ -45,10 +45,11 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.all()
     query = Course.objects
     serializer_class = CourseSerializer
+    # parser_classes = [MultiPartParser, ]
 
     def retrieve(self, request, pk=None):
         queryset = self.query.get(pk=pk)
-        serializer = CoursesItemSerializer(queryset)
+        serializer = CoursesItemSerializer(queryset, context={"request":request})
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses')

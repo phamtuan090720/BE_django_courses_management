@@ -61,7 +61,7 @@ class Course(ModelBase):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=False, related_name='course')
     fee = models.CharField(default='Free', null=True, max_length=10) #free or not
     is_public = models.BooleanField(default=True, null=False) #public or private
-    image = models.ImageField(upload_to='courses/%Y/%m/',null=True, blank=True)
+    image = models.ImageField(upload_to='static/courses/%Y/%m/',null=True, blank=True)
     # students = models.ManyToManyField('User',blank=True,related_name='course')
     def __str__(self):
         return self.name_course
@@ -81,7 +81,7 @@ class Lesson(ModelBase):
     subject = models.CharField(max_length=255)
     content = models.TextField()
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='lessons',related_query_name='my_lession')
-    image = models.ImageField(upload_to='courses/%Y/%m/',null=True, blank=True)
+    image = models.ImageField(upload_to='static/courses/%Y/%m/',null=True, blank=True)
     def __str__(self):
         return self.subject
 
