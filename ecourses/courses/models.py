@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.html import mark_safe
 
 # Create your models here.
@@ -72,7 +73,10 @@ class Student_Course(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='course_join')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=False, related_name='student_join')
     join_date = models.DateTimeField(auto_now_add=True)
-    rate = models.IntegerField(null=True, blank=True)
+    rate = models.IntegerField(null=True, blank=True, validators =[
+                                            MaxValueValidator(5),
+                                            MinValueValidator(0)
+                                        ])
     review = models.TextField(blank=True, null=True)
 
 class Lesson(ModelBase):

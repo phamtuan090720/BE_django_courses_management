@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser
 from .models import Course
+from .paginator import *
 from .serializers import *
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
@@ -45,6 +46,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.all()
     query = Course.objects
     serializer_class = CourseSerializer
+    pagination_class = BasePaginator
     # parser_classes = [MultiPartParser, ]
 
     def retrieve(self, request, pk=None):
@@ -61,6 +63,36 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
         except Course.DoesNotExit:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
+
+    @action(methods=['get'], detail=True, name='Open this courses', url_path='open-courses', url_name='open-courses')
+    def open_courses(self, request, pk=None):
+        try:
+            c = Course.objects.get(pk=pk)
+            c.active = True
+            c.save()
+        except Course.DoesNotExit:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
+
+    @action(methods=['get'], detail=True, name='lesson', url_path='lesson', url_name='lesson')
+    def lesson(self, request, pk=None):
+        q = request.query_params.get('q', None)
+        course = Course.objects.get(pk=pk)
+        queryset = course.lessons.all()
+        if q is not None:
+            queryset = queryset.filter(subject__icontains=q)
+        return Response(status=status.HTTP_200_OK, data=LessonSerializer(queryset, many=True, context={'request': request}).data)
+
+    def get_queryset(self):
+        queryset = Course.objects.all()
+        cate_id = self.request.query_params.get('category_id', None)
+        q = self.request.query_params.get('q', None)
+
+        if cate_id:
+            queryset = queryset.filter(category=cate_id)
+        if q:
+            queryset = queryset.filter(description__icontains=q)
+        return queryset
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -163,7 +195,7 @@ class JoinViewSet(viewsets.ModelViewSet):
     serializer_class = JoinSerializer
 
     def get_permissions(self):
-        if (self.action == 'list'):
+        if (self.action == 'list' or self.action =='retrieve'):
             return [permissions.AllowAny()]
         else:
             return [permissions.IsAuthenticated()]
