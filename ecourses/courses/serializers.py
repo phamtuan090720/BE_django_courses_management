@@ -41,27 +41,31 @@ class JoinSerializer(ModelSerializer):
         model = Student_Course
         fields = ['id', 'student', 'course', 'join_date', 'rate', 'review']
 
+
 class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
 
-class Student_CourseSerializer(ModelSerializer):
-    class Meta:
-        model = Student_Course
-        fields = ['student','rate', 'review']
-
-
-
-class TeacherField(serializers.RelatedField):
-    def to_representation(self, value):
-        return {'id': value.user.id,
-                'username': value.user.username}
 class LessonField(ModelSerializer):
     class Meta:
         model = Lesson
         fields = [ 'subject', 'image']
+class InfoField(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [ 'id', 'username', 'avatar']
 
+class Student_CourseSerializer(ModelSerializer):
+    student = InfoField(read_only=True)
+    class Meta:
+        model = Student_Course
+        fields = ['student','rate', 'review']
+class TeacherField(ModelSerializer):
+    user = InfoField(read_only=True)
+    class Meta:
+        model = User
+        fields = ['user']
 class CourseSerializer(ModelSerializer):
     category = serializers.SlugRelatedField(read_only=True, slug_field='name')
     teacher = TeacherField(read_only=True)
