@@ -50,6 +50,8 @@ REST_FRAMEWORK = {
 'PAGE_SIZE': '8',
 'DEFAULT_AUTHENTICATION_CLASSES': [
     'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    'rest_framework.authentication.BasicAuthentication',
+    'rest_framework.authentication.SessionAuthentication',
     ]
 }
 
@@ -131,7 +133,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecoursedb',
         'USER':'root',
-        'PASSWORD':'123456',
+        'PASSWORD':'12345',
         'HOST':''
     }
 }

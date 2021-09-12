@@ -76,7 +76,7 @@ class CourseSerializer(ModelSerializer):
         return point['rate__avg']
     class Meta:
         model = Course
-        fields = ['id', 'name_course','category', 'description','image', 'created_date', 'active', 'fee',
+        fields = ['id', 'name_course','category', 'subject', 'description','image', 'created_date', 'active', 'fee',
                   'is_public', 'teacher', 'rate','tags']
 
 
@@ -97,7 +97,7 @@ class CoursesItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'name_course','category', 'description','image', 'created_date', 'active', 'fee',
+        fields = ['id', 'name_course','category', 'subject', 'description','image', 'created_date', 'active', 'fee',
                   'is_public', 'updated_date', 'lessons', 'tags', 'teacher', 'student', 'rate', 'student_join']
 
 
