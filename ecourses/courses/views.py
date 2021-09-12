@@ -1,46 +1,52 @@
+from django.conf import settings
 from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser
+from rest_framework.views import APIView
+
 from .models import Course
 from .paginator import *
 from .serializers import *
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
+class AuthInfo(APIView):
+    def get(self, request):
+        return Response(settings.OAUTH2_INFO, status=status.HTTP_200_OK)
+
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, ]
 
+    @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
+    def get_current_user(self, request):
+        return Response(self.serializer_class(request.user).data, status=status.HTTP_200_OK)
+
     def get_permissions(self):
-        if self.action == 'retrieve':
+        if self.action == 'get_current_user':
             return [permissions.IsAuthenticated()]
 
         return [permissions.AllowAny()]
 
 
-class TeacherViewSet(viewsets.ModelViewSet):
+class TeacherViewSet(viewsets.ViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
-    def get_permissions(self):
-        if(self.action=='list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
+    # def get_permissions(self):
+    #     if(self.action=='list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = BasePaginator
 
-    def get_permissions(self):
-        if(self.action=='list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
 
 class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.all()
@@ -76,129 +82,143 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(methods=['get'], detail=True, name='lesson', url_path='lesson', url_name='lesson')
     def lesson(self, request, pk=None):
-        q = request.query_params.get('q', None)
+        kw = request.query_params.get('kw', None)
         course = Course.objects.get(pk=pk)
         queryset = course.lessons.all()
-        if q is not None:
-            queryset = queryset.filter(subject__icontains=q)
+        if kw is not None:
+            queryset = queryset.filter(subject__icontains=kw)
         return Response(status=status.HTTP_200_OK, data=LessonSerializer(queryset, many=True, context={'request': request}).data)
+
+    @action(methods=['post'], detail=True, name='add tag', url_path='add-tag', url_name='add-tag')
+    def add_tag(self, request, pk=None):
+        try:
+            c = Course.objects.get(pk=pk)
+        except :
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data = request.data['name']
+            if data is not None:
+                # for tag in data:
+                c.tags.add(Tag.objects.get_or_create(name = data)[0])
+            c.save()
+            return Response(status=status.HTTP_201_CREATED, data=CoursesItemSerializer(c, context={'request': request}).data)
 
     def get_queryset(self):
         queryset = Course.objects.all()
         cate_id = self.request.query_params.get('category_id', None)
-        q = self.request.query_params.get('q', None)
+        kw = self.request.query_params.get('kw', None)
 
         if cate_id:
             queryset = queryset.filter(category=cate_id)
-        if q:
-            queryset = queryset.filter(description__icontains=q)
+        if kw:
+            queryset = queryset.filter(description__icontains=kw)
         return queryset
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(viewsets.ViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     # permission_classes = [permissions.IsAuthenticated]
 
-    def get_permissions(self):
-        if(self.action=='list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
+    # def get_permissions(self):
+    #     if(self.action=='list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
-class LessonViewSet(viewsets.ModelViewSet):
+class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
-class HomeWorkViewSet(viewsets.ModelViewSet):
+class HomeWorkViewSet(viewsets.ViewSet):
     queryset = HomeWork.objects.all()
     serializer_class = HomeWorkSerializer
+    #
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-
-class FileViewSet(viewsets.ModelViewSet):
+class FileViewSet(viewsets.ViewSet):
     queryset = File.objects.all()
     serializer_class = FileSerializer
+    #
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-
-class VideoViewSet(viewsets.ModelViewSet):
+class VideoViewSet(viewsets.ViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class FollowViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
+class FollowViewSet(viewsets.ViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class SkillViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
+class SkillViewSet(viewsets.ViewSet):
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class JobViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+        # if (self.action == 'list'):
+        #     return [permissions.AllowAny()]
+        # else:
+        #     return [permissions.IsAuthenticated()]
+class JobViewSet(viewsets.ViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class GroupChatViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
+class GroupChatViewSet(viewsets.ViewSet):
     queryset = GroupChat.objects.all()
     serializer_class = GroupChatSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class MessageViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
+class MessageViewSet(viewsets.ViewSet):
     queryset = Message.objects.all()
     serializer_class = MessSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
-class JoinViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+    #     if (self.action == 'list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
+class JoinViewSet(viewsets.ViewSet):
     queryset = Student_Course.objects.all()
     serializer_class = JoinSerializer
 
-    def get_permissions(self):
-        if (self.action == 'list' or self.action =='retrieve'):
-            return [permissions.AllowAny()]
-        else:
-            return [permissions.IsAuthenticated()]
+    # def get_permissions(self):
+    #     if (self.action == 'list' or self.action =='retrieve'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [permissions.IsAuthenticated()]
 
 
 def index(request):
