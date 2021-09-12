@@ -87,6 +87,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
         except :
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
+        # return Response(status=status.HTTP_200_OK, data = UserSerializer(request.user).data)
 
     @action(methods=['get'], detail=True, name='Open this courses', url_path='open-courses', url_name='open-courses')
     def open_courses(self, request, pk=None):
