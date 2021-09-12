@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.23, for Win64 (x86_64)
 --
--- Host: localhost    Database: testdb
+-- Host: localhost    Database: ecoursedb
 -- ------------------------------------------------------
 -- Server version	8.0.23
 
@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `auth_group`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `auth_group` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -76,9 +76,9 @@ DROP TABLE IF EXISTS `auth_permission`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `auth_permission` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `content_type_id` int NOT NULL,
-  `codename` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `codename` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
@@ -104,10 +104,10 @@ DROP TABLE IF EXISTS `courses_category`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_category` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,7 +116,7 @@ CREATE TABLE `courses_category` (
 
 LOCK TABLES `courses_category` WRITE;
 /*!40000 ALTER TABLE `courses_category` DISABLE KEYS */;
-INSERT INTO `courses_category` VALUES (1,'English');
+INSERT INTO `courses_category` VALUES (2,'design'),(1,'English');
 /*!40000 ALTER TABLE `courses_category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -132,19 +132,20 @@ CREATE TABLE `courses_course` (
   `created_date` datetime(6) NOT NULL,
   `updated_date` datetime(6) NOT NULL,
   `active` tinyint(1) NOT NULL,
-  `name_course` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
-  `description` longtext COLLATE utf8_unicode_ci,
-  `image` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `name_course` varchar(200) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci,
+  `image` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
   `category_id` bigint DEFAULT NULL,
   `teacher_id` bigint NOT NULL,
   `is_public` tinyint(1) NOT NULL,
-  `fee` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `fee` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+  `subject` longtext COLLATE utf8_unicode_ci,
   PRIMARY KEY (`id`),
   KEY `courses_course_category_id_d64b93bf_fk_courses_category_id` (`category_id`),
   KEY `courses_course_teacher_id_846fa526_fk_courses_teacher_user_id_id` (`teacher_id`),
   CONSTRAINT `courses_course_category_id_d64b93bf_fk_courses_category_id` FOREIGN KEY (`category_id`) REFERENCES `courses_category` (`id`),
   CONSTRAINT `courses_course_teacher_id_846fa526_fk_courses_teacher_user_id_id` FOREIGN KEY (`teacher_id`) REFERENCES `courses_teacher` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +154,7 @@ CREATE TABLE `courses_course` (
 
 LOCK TABLES `courses_course` WRITE;
 /*!40000 ALTER TABLE `courses_course` DISABLE KEYS */;
-INSERT INTO `courses_course` VALUES (1,'2021-09-07 09:19:57.080951','2021-09-09 11:49:11.609454',1,'English for beginer','Chưa có mô tả Khóa Học','courses/2021/09/download.jfif',1,2,1,'0'),(2,'2021-09-07 10:01:34.842213','2021-09-09 11:50:31.628263',1,'English for kids','Chưa có mô tả Khóa Học','courses/2021/09/download_1.jfif',1,2,1,'0'),(3,'2021-09-07 10:04:20.837923','2021-09-07 10:04:20.837923',1,'test3','Chưa có mô tả Khóa Học','',NULL,2,0,'0'),(4,'2021-09-07 10:04:27.478858','2021-09-08 01:46:55.204611',1,'test4','Chưa có mô tả Khóa Học','',1,2,0,'0'),(6,'2021-09-09 07:49:00.767129','2021-09-09 11:56:26.026403',1,'test5','Chưa có mô tả Khóa Học','courses/2021/09/10.u5762.d20171018.t104146.65072.jpg',1,3,1,'0');
+INSERT INTO `courses_course` VALUES (1,'2021-09-07 09:19:57.080951','2021-09-12 08:01:34.897747',1,'English for beginer','Chưa có mô tả Khóa Học','courses/2021/09/download.jfif',1,2,1,'0',NULL),(2,'2021-09-07 10:01:34.842213','2021-09-12 11:15:44.872515',1,'English for kids','Chưa có mô tả Khóa Học','courses/2021/09/download_1.jfif',1,2,1,'0',NULL),(3,'2021-09-07 10:04:20.837923','2021-09-12 08:23:36.160474',1,'test3','Chưa có mô tả Khóa Học','',2,3,1,'0',NULL),(4,'2021-09-07 10:04:27.478858','2021-09-11 03:08:51.590208',1,'test4','Chưa có mô tả Khóa Học','',1,2,0,'0',NULL),(6,'2021-09-09 07:49:00.767129','2021-09-12 11:21:36.638101',0,'test owner perm','Chưa có mô tả Khóa Học','courses/2021/09/10.u5762.d20171018.t104146.65072.jpg',2,1,0,'0','this is a subject'),(7,'2021-09-09 14:49:57.125698','2021-09-09 14:49:57.125698',1,'test url','Chưa có mô tả Khóa Học','static/courses/2021/09/logo-test.png',1,3,1,'Free',NULL);
 /*!40000 ALTER TABLE `courses_course` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -173,7 +174,7 @@ CREATE TABLE `courses_course_tags` (
   KEY `courses_course_tags_tag_id_20fb041b_fk_courses_tag_id` (`tag_id`),
   CONSTRAINT `courses_course_tags_course_id_f326f2c6_fk_courses_course_id` FOREIGN KEY (`course_id`) REFERENCES `courses_course` (`id`),
   CONSTRAINT `courses_course_tags_tag_id_20fb041b_fk_courses_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `courses_tag` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -182,7 +183,7 @@ CREATE TABLE `courses_course_tags` (
 
 LOCK TABLES `courses_course_tags` WRITE;
 /*!40000 ALTER TABLE `courses_course_tags` DISABLE KEYS */;
-INSERT INTO `courses_course_tags` VALUES (5,1,2),(6,1,3),(3,4,2),(7,6,2);
+INSERT INTO `courses_course_tags` VALUES (5,1,2),(6,1,3),(9,3,4),(39,4,5),(40,4,15),(41,4,16),(42,4,17),(7,6,2),(28,6,10),(8,7,1);
 /*!40000 ALTER TABLE `courses_course_tags` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -195,8 +196,8 @@ DROP TABLE IF EXISTS `courses_file`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_file` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `subject` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `file` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `subject` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `file` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `lession_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `courses_file_lession_id_d6b81570_fk_courses_lesson_id` (`lession_id`),
@@ -250,7 +251,7 @@ DROP TABLE IF EXISTS `courses_groupchat`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_groupchat` (
   `course_id` bigint NOT NULL,
-  `name_group` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `name_group` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`course_id`),
   CONSTRAINT `courses_groupchat_course_id_50be687b_fk_courses_course_id` FOREIGN KEY (`course_id`) REFERENCES `courses_course` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -274,9 +275,9 @@ DROP TABLE IF EXISTS `courses_homework`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_homework` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `subject` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `file` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `content` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `subject` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `file` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `content` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `lesson_id` bigint NOT NULL,
   `author_teacher_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
@@ -305,7 +306,7 @@ DROP TABLE IF EXISTS `courses_job`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_job` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `name_job` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `name_job` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -332,9 +333,9 @@ CREATE TABLE `courses_lesson` (
   `created_date` datetime(6) NOT NULL,
   `updated_date` datetime(6) NOT NULL,
   `active` tinyint(1) NOT NULL,
-  `subject` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `content` longtext COLLATE utf8_unicode_ci NOT NULL,
-  `image` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `subject` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `content` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `image` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
   `course_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `courses_lesson_subject_course_id_f2a8d9de_uniq` (`subject`,`course_id`),
@@ -362,7 +363,7 @@ DROP TABLE IF EXISTS `courses_message`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_message` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `mess` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `mess` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `date_post` datetime(6) NOT NULL,
   `user_id` bigint NOT NULL,
   `group_chat_id` bigint NOT NULL,
@@ -392,7 +393,7 @@ DROP TABLE IF EXISTS `courses_skill`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_skill` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `name_skill` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `name_skill` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -417,7 +418,7 @@ CREATE TABLE `courses_student_course` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `join_date` datetime(6) NOT NULL,
   `rate` int DEFAULT NULL,
-  `review` longtext COLLATE utf8_unicode_ci,
+  `review` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci,
   `course_id` bigint NOT NULL,
   `student_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
@@ -447,10 +448,10 @@ DROP TABLE IF EXISTS `courses_tag`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_tag` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -459,7 +460,7 @@ CREATE TABLE `courses_tag` (
 
 LOCK TABLES `courses_tag` WRITE;
 /*!40000 ALTER TABLE `courses_tag` DISABLE KEYS */;
-INSERT INTO `courses_tag` VALUES (1,'tag1'),(2,'tag2'),(3,'tag3');
+INSERT INTO `courses_tag` VALUES (16,'<QueryDict: {\'name\': [\'hihi\']}>'),(17,'hihi'),(15,'name'),(10,'tag'),(5,'tag 1'),(1,'tag1'),(2,'tag2'),(3,'tag3'),(8,'taggg'),(4,'tesstTag');
 /*!40000 ALTER TABLE `courses_tag` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -487,7 +488,7 @@ CREATE TABLE `courses_teacher` (
 
 LOCK TABLES `courses_teacher` WRITE;
 /*!40000 ALTER TABLE `courses_teacher` DISABLE KEYS */;
-INSERT INTO `courses_teacher` VALUES (2,1,NULL),(3,0,2);
+INSERT INTO `courses_teacher` VALUES (1,1,2),(2,1,NULL),(3,0,2);
 /*!40000 ALTER TABLE `courses_teacher` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -528,20 +529,20 @@ DROP TABLE IF EXISTS `courses_user`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_user` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `password` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+  `password` varchar(128) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `last_login` datetime(6) DEFAULT NULL,
   `is_superuser` tinyint(1) NOT NULL,
-  `username` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
-  `first_name` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
-  `last_name` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
-  `email` varchar(254) COLLATE utf8_unicode_ci NOT NULL,
+  `username` varchar(150) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `first_name` varchar(150) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `last_name` varchar(150) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `email` varchar(254) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `is_staff` tinyint(1) NOT NULL,
   `is_active` tinyint(1) NOT NULL,
   `date_joined` datetime(6) NOT NULL,
-  `avatar` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `avatar` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -550,7 +551,7 @@ CREATE TABLE `courses_user` (
 
 LOCK TABLES `courses_user` WRITE;
 /*!40000 ALTER TABLE `courses_user` DISABLE KEYS */;
-INSERT INTO `courses_user` VALUES (1,'pbkdf2_sha256$260000$8oaLQECi9IkyamsEwcXoLT$CWXdfSOlcYVf9AplJwH6wAlV8hMPHvrY6EyAiryy+b0=','2021-09-08 11:03:41.237480',1,'admin','','','admin@gmail.com',1,1,'2021-09-06 11:03:12.582479',''),(2,'pbkdf2_sha256$260000$KlK8Wn4fxdg5HzPpZUKFJD$+2/lobDAxLKRqvDTbRSlXpZvBdgTE2iz2dr8e0rjHQ8=',NULL,0,'ThuThuy','','','',0,1,'2021-09-07 09:12:05.641903',''),(3,'1',NULL,0,'helloword','','','helloword@gmail.com',0,1,'2021-09-08 13:36:23.926069','static/uploads/2021/09/c.jpg'),(4,'pbkdf2_sha256$260000$PKHQk09s2WcJpgYeLJQ2yl$X791m7/tmQhy/6FUrPcQ6HeTXsZ+ZqOCafbGnVb5c1U=',NULL,0,'helloword2','hello','word 2','helloword2@gmail.com',0,1,'2021-09-08 14:00:11.604471','static/uploads/2021/09/001.png');
+INSERT INTO `courses_user` VALUES (1,'pbkdf2_sha256$260000$ZPBccfZpPeNVpYumgwX12M$RfaEhADBL9imE0F7monM+HfHLzCG+9w+qc4tBF8l210=','2021-09-12 10:54:00.699253',1,'admin','','','admin@gmail.com',1,1,'2021-09-06 11:03:12.582479',''),(2,'pbkdf2_sha256$260000$KlK8Wn4fxdg5HzPpZUKFJD$+2/lobDAxLKRqvDTbRSlXpZvBdgTE2iz2dr8e0rjHQ8=','2021-09-12 11:13:56.921490',0,'ThuThuy','','','',0,1,'2021-09-07 09:12:05.000000','static/uploads/2021/09/60618778_2320937534611138_7508554572390989824_n.jpg'),(3,'1',NULL,0,'helloword','','','helloword@gmail.com',0,1,'2021-09-08 13:36:23.926069','static/uploads/2021/09/c.jpg'),(4,'pbkdf2_sha256$260000$PKHQk09s2WcJpgYeLJQ2yl$X791m7/tmQhy/6FUrPcQ6HeTXsZ+ZqOCafbGnVb5c1U=',NULL,0,'helloword2','hello','word 2','helloword2@gmail.com',0,1,'2021-09-08 14:00:11.604471','static/uploads/2021/09/001.png'),(5,'pbkdf2_sha256$260000$U3AWzwpZwzgCUUWCQoTSJp$1/V5CSXC1cuw8fiDLySnZfbR3cnKslG/o90Sr2BN+V0=',NULL,0,'userTest','thu','thuy','',0,1,'2021-09-09 15:05:25.643116','static/uploads/2021/09/anh-bia-me-before-you-e1580920303980.jpg'),(6,'pbkdf2_sha256$260000$wJUyuZVq6av1Y2xpEkFfX6$WjvGrFUPqwYGEFMYj6p5Ye3GfOnqSqm6xMv5TH6/F0k=',NULL,0,'meo','test','register','',0,1,'2021-09-10 08:06:29.023497','static/uploads/2021/09/81yAo5ElQlL.jpg'),(7,'pbkdf2_sha256$260000$q9gIuAo3psQRQ1zqvY7nSs$Vzy9W/oJD2jRoENQ/ukWmwGa1O1ZgRRdiwhm4tvI6mE=','2021-09-12 09:54:13.113068',0,'meo2','test2','register2','',0,1,'2021-09-10 08:33:39.000000','static/uploads/2021/09/81yAo5ElQlL_16MbCBf.jpg'),(8,'12345',NULL,0,'testUser','thu','thuy','lan@gmail.com',0,1,'2021-09-12 02:34:55.000000','static/uploads/2021/09/mat-biec.png');
 /*!40000 ALTER TABLE `courses_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -619,8 +620,8 @@ DROP TABLE IF EXISTS `courses_video`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses_video` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `subject` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `url_video` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `subject` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `url_video` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `lession_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `courses_video_lession_id_76a7e0fc_fk_courses_lesson_id` (`lession_id`),
@@ -647,10 +648,10 @@ DROP TABLE IF EXISTS `django_admin_log`;
 CREATE TABLE `django_admin_log` (
   `id` int NOT NULL AUTO_INCREMENT,
   `action_time` datetime(6) NOT NULL,
-  `object_id` longtext COLLATE utf8_unicode_ci,
-  `object_repr` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+  `object_id` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci,
+  `object_repr` varchar(200) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `action_flag` smallint unsigned NOT NULL,
-  `change_message` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `change_message` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `content_type_id` int DEFAULT NULL,
   `user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
@@ -659,7 +660,7 @@ CREATE TABLE `django_admin_log` (
   CONSTRAINT `django_admin_log_content_type_id_c4bce8eb_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`),
   CONSTRAINT `django_admin_log_user_id_c564eba6_fk_courses_user_id` FOREIGN KEY (`user_id`) REFERENCES `courses_user` (`id`),
   CONSTRAINT `django_admin_log_chk_1` CHECK ((`action_flag` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -668,7 +669,7 @@ CREATE TABLE `django_admin_log` (
 
 LOCK TABLES `django_admin_log` WRITE;
 /*!40000 ALTER TABLE `django_admin_log` DISABLE KEYS */;
-INSERT INTO `django_admin_log` VALUES (1,'2021-09-08 01:45:43.667499','1','tag1',1,'[{\"added\": {}}]',12,1),(2,'2021-09-08 01:45:49.196472','2','tag2',1,'[{\"added\": {}}]',12,1),(3,'2021-09-08 01:46:23.360297','1','cate1',1,'[{\"added\": {}}]',7,1),(4,'2021-09-08 01:46:27.280973','5','test5',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\"]}}]',8,1),(5,'2021-09-08 01:46:43.722637','4','test4',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\"]}}]',8,1),(6,'2021-09-08 01:46:55.212643','4','test4',2,'[]',8,1),(7,'2021-09-08 02:00:36.273976','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',8,1),(8,'2021-09-08 02:03:18.249558','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\", \"Image\"]}}]',8,1),(9,'2021-09-08 02:03:31.892132','5','test5',2,'[]',8,1),(10,'2021-09-08 02:03:52.741326','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',8,1),(11,'2021-09-08 03:29:19.644349','5','bai 1',1,'[{\"added\": {}}]',13,1),(12,'2021-09-08 03:30:35.150748','1','ThuThuy Said hello mn in group chat bai 1 at time: 2021-09-08 03:30:35.142728+00:00',1,'[{\"added\": {}}]',17,1),(13,'2021-09-09 03:48:31.614984','1','lesson test 1',1,'[{\"added\": {}}]',10,1),(14,'2021-09-09 04:32:31.221237','3','tag3',1,'[{\"added\": {}}]',12,1),(15,'2021-09-09 04:32:48.612804','5','test5',2,'[{\"changed\": {\"fields\": [\"Tags\", \"Students\"]}}]',8,1),(16,'2021-09-09 04:35:01.958839','1','test couse',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\", \"Image\", \"Students\"]}}]',8,1),(17,'2021-09-09 07:48:20.449261','5','test5',3,'',8,1),(18,'2021-09-09 07:49:00.838976','6','test5',1,'[{\"added\": {}}]',8,1),(19,'2021-09-09 07:57:40.424075','1','test couse',2,'[{\"changed\": {\"fields\": [\"Is public\"]}}]',8,1),(20,'2021-09-09 08:35:36.405926','1','Student_Course object (1)',1,'[{\"added\": {}}]',25,1),(21,'2021-09-09 08:36:20.168475','2','Student_Course object (2)',1,'[{\"added\": {}}]',25,1),(22,'2021-09-09 09:33:33.131193','3','Student_Course object (3)',1,'[{\"added\": {}}]',25,1),(23,'2021-09-09 11:47:37.762845','1','English',2,'[{\"changed\": {\"fields\": [\"Name\"]}}]',7,1),(24,'2021-09-09 11:49:11.643130','1','English for beginer',2,'[{\"changed\": {\"fields\": [\"Name course\", \"Image\"]}}]',8,1),(25,'2021-09-09 11:50:31.656904','2','English for kids',2,'[{\"changed\": {\"fields\": [\"Name course\", \"Category\", \"Is public\", \"Image\"]}}]',8,1),(26,'2021-09-09 11:55:29.376733','1','English Teacher',1,'[{\"added\": {}}]',9,1),(27,'2021-09-09 11:55:53.794133','2','designer',1,'[{\"added\": {}}]',9,1),(28,'2021-09-09 11:56:10.585843','3','helloword',1,'[{\"added\": {}}]',16,1),(29,'2021-09-09 11:56:26.065902','6','test5',2,'[{\"changed\": {\"fields\": [\"Teacher\"]}}]',8,1);
+INSERT INTO `django_admin_log` VALUES (1,'2021-09-08 01:45:43.667499','1','tag1',1,'[{\"added\": {}}]',12,1),(2,'2021-09-08 01:45:49.196472','2','tag2',1,'[{\"added\": {}}]',12,1),(3,'2021-09-08 01:46:23.360297','1','cate1',1,'[{\"added\": {}}]',7,1),(4,'2021-09-08 01:46:27.280973','5','test5',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\"]}}]',8,1),(5,'2021-09-08 01:46:43.722637','4','test4',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\"]}}]',8,1),(6,'2021-09-08 01:46:55.212643','4','test4',2,'[]',8,1),(7,'2021-09-08 02:00:36.273976','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',8,1),(8,'2021-09-08 02:03:18.249558','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\", \"Image\"]}}]',8,1),(9,'2021-09-08 02:03:31.892132','5','test5',2,'[]',8,1),(10,'2021-09-08 02:03:52.741326','5','test5',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',8,1),(11,'2021-09-08 03:29:19.644349','5','bai 1',1,'[{\"added\": {}}]',13,1),(12,'2021-09-08 03:30:35.150748','1','ThuThuy Said hello mn in group chat bai 1 at time: 2021-09-08 03:30:35.142728+00:00',1,'[{\"added\": {}}]',17,1),(13,'2021-09-09 03:48:31.614984','1','lesson test 1',1,'[{\"added\": {}}]',10,1),(14,'2021-09-09 04:32:31.221237','3','tag3',1,'[{\"added\": {}}]',12,1),(15,'2021-09-09 04:32:48.612804','5','test5',2,'[{\"changed\": {\"fields\": [\"Tags\", \"Students\"]}}]',8,1),(16,'2021-09-09 04:35:01.958839','1','test couse',2,'[{\"changed\": {\"fields\": [\"Category\", \"Tags\", \"Image\", \"Students\"]}}]',8,1),(17,'2021-09-09 07:48:20.449261','5','test5',3,'',8,1),(18,'2021-09-09 07:49:00.838976','6','test5',1,'[{\"added\": {}}]',8,1),(19,'2021-09-09 07:57:40.424075','1','test couse',2,'[{\"changed\": {\"fields\": [\"Is public\"]}}]',8,1),(20,'2021-09-09 08:35:36.405926','1','Student_Course object (1)',1,'[{\"added\": {}}]',25,1),(21,'2021-09-09 08:36:20.168475','2','Student_Course object (2)',1,'[{\"added\": {}}]',25,1),(22,'2021-09-09 09:33:33.131193','3','Student_Course object (3)',1,'[{\"added\": {}}]',25,1),(23,'2021-09-09 11:47:37.762845','1','English',2,'[{\"changed\": {\"fields\": [\"Name\"]}}]',7,1),(24,'2021-09-09 11:49:11.643130','1','English for beginer',2,'[{\"changed\": {\"fields\": [\"Name course\", \"Image\"]}}]',8,1),(25,'2021-09-09 11:50:31.656904','2','English for kids',2,'[{\"changed\": {\"fields\": [\"Name course\", \"Category\", \"Is public\", \"Image\"]}}]',8,1),(26,'2021-09-09 11:55:29.376733','1','English Teacher',1,'[{\"added\": {}}]',9,1),(27,'2021-09-09 11:55:53.794133','2','designer',1,'[{\"added\": {}}]',9,1),(28,'2021-09-09 11:56:10.585843','3','helloword',1,'[{\"added\": {}}]',16,1),(29,'2021-09-09 11:56:26.065902','6','test5',2,'[{\"changed\": {\"fields\": [\"Teacher\"]}}]',8,1),(30,'2021-09-09 14:49:57.275860','7','test url',1,'[{\"added\": {}}]',8,1),(31,'2021-09-10 02:09:49.063669','2','design',1,'[{\"added\": {}}]',7,1),(32,'2021-09-10 02:10:05.885739','3','test3',2,'[{\"changed\": {\"fields\": [\"Category\", \"Teacher\", \"Is public\"]}}]',8,1),(33,'2021-09-10 02:54:20.606435','2','ThuThuy',2,'[{\"changed\": {\"fields\": [\"Avatar\"]}}]',6,1),(34,'2021-09-11 02:58:17.172537','4','test4',2,'[{\"changed\": {\"fields\": [\"Tags\"]}}]',8,1),(35,'2021-09-11 02:58:49.207726','14','name',3,'',12,1),(36,'2021-09-11 02:58:49.261323','13','1',3,'',12,1),(37,'2021-09-11 02:58:49.320564','12','g',3,'',12,1),(38,'2021-09-11 02:58:49.370800','11','a',3,'',12,1),(39,'2021-09-11 02:58:49.420360','9','hihi',3,'',12,1),(40,'2021-09-11 02:58:49.470420','7','t',3,'',12,1),(41,'2021-09-11 02:58:49.529701','6','tagg',3,'',12,1),(42,'2021-09-12 02:13:55.395457','7','meo2',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',6,1),(43,'2021-09-12 02:31:09.554270','7','meo2',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',6,1),(44,'2021-09-12 02:36:19.695005','8','testUser',1,'[{\"added\": {}}]',6,1),(45,'2021-09-12 03:31:07.532924','7','meo2',2,'[{\"changed\": {\"fields\": [\"Active\"]}}]',6,1),(46,'2021-09-12 08:56:12.799196','1','admin',1,'[{\"added\": {}}]',16,1),(47,'2021-09-12 08:57:38.499375','6','test owner perm',2,'[{\"changed\": {\"fields\": [\"Name course\", \"Subject\", \"Category\", \"Teacher\"]}}]',8,1);
 /*!40000 ALTER TABLE `django_admin_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -681,8 +682,8 @@ DROP TABLE IF EXISTS `django_content_type`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `django_content_type` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `app_label` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `model` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `app_label` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `model` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -707,11 +708,11 @@ DROP TABLE IF EXISTS `django_migrations`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `django_migrations` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `app` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `app` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -720,7 +721,7 @@ CREATE TABLE `django_migrations` (
 
 LOCK TABLES `django_migrations` WRITE;
 /*!40000 ALTER TABLE `django_migrations` DISABLE KEYS */;
-INSERT INTO `django_migrations` VALUES (1,'contenttypes','0001_initial','2021-09-06 10:58:47.322833'),(2,'contenttypes','0002_remove_content_type_name','2021-09-06 10:58:47.407319'),(3,'auth','0001_initial','2021-09-06 10:58:47.734802'),(4,'auth','0002_alter_permission_name_max_length','2021-09-06 10:58:47.790351'),(5,'auth','0003_alter_user_email_max_length','2021-09-06 10:58:47.806859'),(6,'auth','0004_alter_user_username_opts','2021-09-06 10:58:47.808399'),(7,'auth','0005_alter_user_last_login_null','2021-09-06 10:58:47.808399'),(8,'auth','0006_require_contenttypes_0002','2021-09-06 10:58:47.824109'),(9,'auth','0007_alter_validators_add_error_messages','2021-09-06 10:58:47.824109'),(10,'auth','0008_alter_user_username_max_length','2021-09-06 10:58:47.839764'),(11,'auth','0009_alter_user_last_name_max_length','2021-09-06 10:58:47.844627'),(12,'auth','0010_alter_group_name_max_length','2021-09-06 10:58:47.902400'),(13,'auth','0011_update_proxy_permissions','2021-09-06 10:58:47.910456'),(14,'auth','0012_alter_user_first_name_max_length','2021-09-06 10:58:47.910456'),(15,'courses','0001_initial','2021-09-06 10:58:50.548815'),(16,'admin','0001_initial','2021-09-06 10:58:50.887744'),(17,'admin','0002_logentry_remove_auto_add','2021-09-06 10:58:50.903408'),(18,'admin','0003_logentry_add_action_flag_choices','2021-09-06 10:58:50.903408'),(19,'sessions','0001_initial','2021-09-06 10:58:50.955126'),(20,'courses','0002_auto_20210908_0944','2021-09-08 02:44:57.849370'),(21,'oauth2_provider','0001_initial','2021-09-08 12:56:49.661709'),(22,'oauth2_provider','0002_auto_20190406_1805','2021-09-08 12:56:49.899908'),(23,'oauth2_provider','0003_auto_20201211_1314','2021-09-08 12:56:50.007700'),(24,'oauth2_provider','0004_auto_20200902_2022','2021-09-08 12:56:50.463636'),(25,'courses','0003_auto_20210909_1044','2021-09-09 03:45:03.071665'),(26,'courses','0004_alter_course_teacher','2021-09-09 07:14:43.524777'),(27,'courses','0005_auto_20210909_1447','2021-09-09 07:47:18.740986'),(28,'courses','0006_auto_20210909_1528','2021-09-09 08:28:46.464011'),(29,'courses','0007_rename_rare_student_course_rate','2021-09-09 08:37:24.441023'),(30,'courses','0008_auto_20210909_1703','2021-09-09 10:03:35.721900');
+INSERT INTO `django_migrations` VALUES (1,'contenttypes','0001_initial','2021-09-06 10:58:47.322833'),(2,'contenttypes','0002_remove_content_type_name','2021-09-06 10:58:47.407319'),(3,'auth','0001_initial','2021-09-06 10:58:47.734802'),(4,'auth','0002_alter_permission_name_max_length','2021-09-06 10:58:47.790351'),(5,'auth','0003_alter_user_email_max_length','2021-09-06 10:58:47.806859'),(6,'auth','0004_alter_user_username_opts','2021-09-06 10:58:47.808399'),(7,'auth','0005_alter_user_last_login_null','2021-09-06 10:58:47.808399'),(8,'auth','0006_require_contenttypes_0002','2021-09-06 10:58:47.824109'),(9,'auth','0007_alter_validators_add_error_messages','2021-09-06 10:58:47.824109'),(10,'auth','0008_alter_user_username_max_length','2021-09-06 10:58:47.839764'),(11,'auth','0009_alter_user_last_name_max_length','2021-09-06 10:58:47.844627'),(12,'auth','0010_alter_group_name_max_length','2021-09-06 10:58:47.902400'),(13,'auth','0011_update_proxy_permissions','2021-09-06 10:58:47.910456'),(14,'auth','0012_alter_user_first_name_max_length','2021-09-06 10:58:47.910456'),(15,'courses','0001_initial','2021-09-06 10:58:50.548815'),(16,'admin','0001_initial','2021-09-06 10:58:50.887744'),(17,'admin','0002_logentry_remove_auto_add','2021-09-06 10:58:50.903408'),(18,'admin','0003_logentry_add_action_flag_choices','2021-09-06 10:58:50.903408'),(19,'sessions','0001_initial','2021-09-06 10:58:50.955126'),(20,'courses','0002_auto_20210908_0944','2021-09-08 02:44:57.849370'),(21,'oauth2_provider','0001_initial','2021-09-08 12:56:49.661709'),(22,'oauth2_provider','0002_auto_20190406_1805','2021-09-08 12:56:49.899908'),(23,'oauth2_provider','0003_auto_20201211_1314','2021-09-08 12:56:50.007700'),(24,'oauth2_provider','0004_auto_20200902_2022','2021-09-08 12:56:50.463636'),(25,'courses','0003_auto_20210909_1044','2021-09-09 03:45:03.071665'),(26,'courses','0004_alter_course_teacher','2021-09-09 07:14:43.524777'),(27,'courses','0005_auto_20210909_1447','2021-09-09 07:47:18.740986'),(28,'courses','0006_auto_20210909_1528','2021-09-09 08:28:46.464011'),(29,'courses','0007_rename_rare_student_course_rate','2021-09-09 08:37:24.441023'),(30,'courses','0008_auto_20210909_1703','2021-09-09 10:03:35.721900'),(31,'courses','0009_auto_20210909_2148','2021-09-09 14:48:47.501704'),(32,'courses','0010_alter_student_course_rate','2021-09-12 01:45:44.331787'),(33,'courses','0011_course_subject','2021-09-12 07:20:12.123081');
 /*!40000 ALTER TABLE `django_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -732,8 +733,8 @@ DROP TABLE IF EXISTS `django_session`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `django_session` (
-  `session_key` varchar(40) COLLATE utf8_unicode_ci NOT NULL,
-  `session_data` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `session_key` varchar(40) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `session_data` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `expire_date` datetime(6) NOT NULL,
   PRIMARY KEY (`session_key`),
   KEY `django_session_expire_date_a5c62663` (`expire_date`)
@@ -746,7 +747,7 @@ CREATE TABLE `django_session` (
 
 LOCK TABLES `django_session` WRITE;
 /*!40000 ALTER TABLE `django_session` DISABLE KEYS */;
-INSERT INTO `django_session` VALUES ('k8brwwe191jmphgr2zdfeigv4fzyvaq5','.eJxVjMEOwiAQRP-FsyHgBlg8evcbyC5spWpoUtqT8d9tkx50jvPezFslWpea1i5zGou6KKtOvx1TfkrbQXlQu086T22ZR9a7og_a9W0q8roe7t9BpV63tYTi0NgYsw_eWSNA_ryFogHDgFEQ0LAbuAwYMQQGZs4IwbHP0anPF7oHNyk:1mNuZG:5WDAYm1HDEir5nG_vlcMsmYtubsxd69zebinjZ0ZwW0','2021-09-22 10:12:34.321036'),('ld1ny81vhhjmz1ahe3350o5445que4zt','.eJxVjMEOwiAQRP-FsyHgBlg8evcbyC5spWpoUtqT8d9tkx50jvPezFslWpea1i5zGou6KKtOvx1TfkrbQXlQu086T22ZR9a7og_a9W0q8roe7t9BpV63tYTi0NgYsw_eWSNA_ryFogHDgFEQ0LAbuAwYMQQGZs4IwbHP0anPF7oHNyk:1mNvMj:iTw-KJVzfctrtlIB90jD_jNFlpi3yA93YP3IsI0ObmI','2021-09-22 11:03:41.246394');
+INSERT INTO `django_session` VALUES ('4ba5wpnueaw0gzhtlnysbjo3qhavw24f','.eJxVjMEOwiAQBf-FsyGwQAGP3v0GsrAgVQNJaU_Gf9cmPej1zcx7sYDbWsM28hJmYmcG7PS7RUyP3HZAd2y3zlNv6zJHviv8oINfO-Xn5XD_DiqO-q0zAoK3UbgygQWpZVGaHJKzJkKRRkAmDTo5JVQkWayXVGwxXkwGrWHvD9HkN0M:1mPNQq:Mf0256zudOgpg8mtZE5S-vURP0jKPvojf56b40XIXLU','2021-09-26 11:13:56.976170'),('k8brwwe191jmphgr2zdfeigv4fzyvaq5','.eJxVjMEOwiAQRP-FsyHgBlg8evcbyC5spWpoUtqT8d9tkx50jvPezFslWpea1i5zGou6KKtOvx1TfkrbQXlQu086T22ZR9a7og_a9W0q8roe7t9BpV63tYTi0NgYsw_eWSNA_ryFogHDgFEQ0LAbuAwYMQQGZs4IwbHP0anPF7oHNyk:1mNuZG:5WDAYm1HDEir5nG_vlcMsmYtubsxd69zebinjZ0ZwW0','2021-09-22 10:12:34.321036');
 /*!40000 ALTER TABLE `django_session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -759,9 +760,9 @@ DROP TABLE IF EXISTS `oauth2_provider_accesstoken`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `oauth2_provider_accesstoken` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `expires` datetime(6) NOT NULL,
-  `scope` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `scope` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `application_id` bigint DEFAULT NULL,
   `user_id` bigint DEFAULT NULL,
   `created` datetime(6) NOT NULL,
@@ -778,7 +779,7 @@ CREATE TABLE `oauth2_provider_accesstoken` (
   CONSTRAINT `oauth2_provider_acce_id_token_id_85db651b_fk_oauth2_pr` FOREIGN KEY (`id_token_id`) REFERENCES `oauth2_provider_idtoken` (`id`),
   CONSTRAINT `oauth2_provider_acce_source_refresh_token_e66fbc72_fk_oauth2_pr` FOREIGN KEY (`source_refresh_token_id`) REFERENCES `oauth2_provider_refreshtoken` (`id`),
   CONSTRAINT `oauth2_provider_accesstoken_user_id_6e4c9a65_fk_courses_user_id` FOREIGN KEY (`user_id`) REFERENCES `courses_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -787,7 +788,7 @@ CREATE TABLE `oauth2_provider_accesstoken` (
 
 LOCK TABLES `oauth2_provider_accesstoken` WRITE;
 /*!40000 ALTER TABLE `oauth2_provider_accesstoken` DISABLE KEYS */;
-INSERT INTO `oauth2_provider_accesstoken` VALUES (1,'Wd6WUf5x7v9FO6FPkGaAvbO8vFzxqy','2021-09-08 23:17:11.007708','read write',1,1,'2021-09-08 13:17:11.007708','2021-09-08 13:17:11.007708',NULL,NULL),(2,'NM4TxHb0rtYbrvITQUWbtmOjOneG4y','2021-09-08 23:56:37.160630','read write',1,1,'2021-09-08 13:56:37.160630','2021-09-08 13:56:37.160630',NULL,NULL),(3,'fgT4cMWHZ2ao5QoFSf86KUszdqxAKq','2021-09-09 00:00:20.066905','read write',1,4,'2021-09-08 14:00:20.066905','2021-09-08 14:00:20.066905',NULL,NULL),(4,'KOPIIHTqWAPjB25ZuQAHstcEtGvjMK','2021-09-09 01:51:00.468311','read write',1,4,'2021-09-08 15:51:00.469307','2021-09-08 15:51:00.469307',NULL,NULL);
+INSERT INTO `oauth2_provider_accesstoken` VALUES (1,'Wd6WUf5x7v9FO6FPkGaAvbO8vFzxqy','2021-09-08 23:17:11.007708','read write',1,1,'2021-09-08 13:17:11.007708','2021-09-08 13:17:11.007708',NULL,NULL),(2,'NM4TxHb0rtYbrvITQUWbtmOjOneG4y','2021-09-08 23:56:37.160630','read write',1,1,'2021-09-08 13:56:37.160630','2021-09-08 13:56:37.160630',NULL,NULL),(3,'fgT4cMWHZ2ao5QoFSf86KUszdqxAKq','2021-09-09 00:00:20.066905','read write',1,4,'2021-09-08 14:00:20.066905','2021-09-08 14:00:20.066905',NULL,NULL),(4,'KOPIIHTqWAPjB25ZuQAHstcEtGvjMK','2021-09-09 01:51:00.468311','read write',1,4,'2021-09-08 15:51:00.469307','2021-09-08 15:51:00.469307',NULL,NULL),(5,'hNa3irFIq7WkXh2edLlA9Q258nnW2l','2021-09-11 17:41:12.157758','read write',1,1,'2021-09-11 07:41:12.157758','2021-09-11 07:41:12.157758',NULL,NULL),(6,'4Phkx2k6jHtNpF8l7uFAMsf5vRXLog','2021-09-12 12:10:28.076268','read write',1,7,'2021-09-12 02:10:28.076268','2021-09-12 02:10:28.076268',NULL,NULL),(7,'Rd75u6kUw9NT4hRxaHrsZyNawavl6X','2021-09-12 13:31:11.273496','read write',1,7,'2021-09-12 03:31:11.274494','2021-09-12 03:31:11.274494',NULL,NULL),(8,'lcH6tIYqSceq67BLhhT9NdMIUfbRdS','2021-09-12 13:35:23.082464','read write',1,7,'2021-09-12 03:35:23.082464','2021-09-12 03:35:23.082464',NULL,NULL),(9,'Tb6w5gVvoUf8gC9xwKsChn3SZuqmCZ','2021-09-12 13:42:54.021238','read write',1,7,'2021-09-12 03:42:54.022233','2021-09-12 03:42:54.022233',NULL,NULL),(10,'HiuLOWb9RrWpTsTv8myENIhRhjVOLG','2021-09-12 13:43:08.846692','read write',1,7,'2021-09-12 03:43:08.847687','2021-09-12 03:43:08.847687',NULL,NULL),(11,'7Id9iICVCsyUFV91GwVNwNlCpxD4O7','2021-09-12 18:24:53.707352','read write',1,2,'2021-09-12 08:24:53.707352','2021-09-12 08:24:53.707352',NULL,NULL),(12,'TfNr1lnXqWzRM31hG33hK47ccAO1d4','2021-09-12 18:49:46.737972','read write',1,2,'2021-09-12 08:49:46.738968','2021-09-12 08:49:46.738968',NULL,NULL),(13,'fNgGL3v0M1Jv50D64YbkW8o3velQMW','2021-09-12 19:41:11.101643','read write',1,1,'2021-09-12 09:41:11.102599','2021-09-12 09:41:11.102599',NULL,NULL);
 /*!40000 ALTER TABLE `oauth2_provider_accesstoken` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -800,17 +801,17 @@ DROP TABLE IF EXISTS `oauth2_provider_application`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `oauth2_provider_application` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `client_id` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `redirect_uris` longtext COLLATE utf8_unicode_ci NOT NULL,
-  `client_type` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
-  `authorization_grant_type` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
-  `client_secret` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `client_id` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `redirect_uris` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `client_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `authorization_grant_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `client_secret` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `user_id` bigint DEFAULT NULL,
   `skip_authorization` tinyint(1) NOT NULL,
   `created` datetime(6) NOT NULL,
   `updated` datetime(6) NOT NULL,
-  `algorithm` varchar(5) COLLATE utf8_unicode_ci NOT NULL,
+  `algorithm` varchar(5) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `client_id` (`client_id`),
   KEY `oauth2_provider_application_user_id_79829054_fk_courses_user_id` (`user_id`),
@@ -838,18 +839,18 @@ DROP TABLE IF EXISTS `oauth2_provider_grant`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `oauth2_provider_grant` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `code` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `code` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `expires` datetime(6) NOT NULL,
-  `redirect_uri` longtext COLLATE utf8_unicode_ci NOT NULL,
-  `scope` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `redirect_uri` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `scope` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `application_id` bigint NOT NULL,
   `user_id` bigint NOT NULL,
   `created` datetime(6) NOT NULL,
   `updated` datetime(6) NOT NULL,
-  `code_challenge` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
-  `code_challenge_method` varchar(10) COLLATE utf8_unicode_ci NOT NULL,
-  `nonce` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `claims` longtext COLLATE utf8_unicode_ci NOT NULL DEFAULT (_utf8mb3''),
+  `code_challenge` varchar(128) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `code_challenge_method` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `nonce` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `claims` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT (_utf8mb3''),
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`),
   KEY `oauth2_provider_gran_application_id_81923564_fk_oauth2_pr` (`application_id`),
@@ -877,9 +878,9 @@ DROP TABLE IF EXISTS `oauth2_provider_idtoken`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `oauth2_provider_idtoken` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `jti` char(32) COLLATE utf8_unicode_ci NOT NULL,
+  `jti` char(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `expires` datetime(6) NOT NULL,
-  `scope` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `scope` longtext CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `created` datetime(6) NOT NULL,
   `updated` datetime(6) NOT NULL,
   `application_id` bigint DEFAULT NULL,
@@ -911,7 +912,7 @@ DROP TABLE IF EXISTS `oauth2_provider_refreshtoken`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `oauth2_provider_refreshtoken` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `access_token_id` bigint DEFAULT NULL,
   `application_id` bigint NOT NULL,
   `user_id` bigint NOT NULL,
@@ -926,7 +927,7 @@ CREATE TABLE `oauth2_provider_refreshtoken` (
   CONSTRAINT `oauth2_provider_refr_access_token_id_775e84e8_fk_oauth2_pr` FOREIGN KEY (`access_token_id`) REFERENCES `oauth2_provider_accesstoken` (`id`),
   CONSTRAINT `oauth2_provider_refr_application_id_2d1c311b_fk_oauth2_pr` FOREIGN KEY (`application_id`) REFERENCES `oauth2_provider_application` (`id`),
   CONSTRAINT `oauth2_provider_refreshtoken_user_id_da837fce_fk_courses_user_id` FOREIGN KEY (`user_id`) REFERENCES `courses_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -935,7 +936,7 @@ CREATE TABLE `oauth2_provider_refreshtoken` (
 
 LOCK TABLES `oauth2_provider_refreshtoken` WRITE;
 /*!40000 ALTER TABLE `oauth2_provider_refreshtoken` DISABLE KEYS */;
-INSERT INTO `oauth2_provider_refreshtoken` VALUES (1,'frzbxvd7jqxxoJwX3YVL0jtITc6cTS',1,1,1,'2021-09-08 13:17:11.007708','2021-09-08 13:17:11.007708',NULL),(2,'UfEIVM0ObidvW6HHf5DkkKPeG5Qf2S',2,1,1,'2021-09-08 13:56:37.160630','2021-09-08 13:56:37.160630',NULL),(3,'XmZNw2lk6aUinGSOPeJIVtnROfh8cn',3,1,4,'2021-09-08 14:00:20.074956','2021-09-08 14:00:20.074956',NULL),(4,'LQpEUxFa8LELvwzgTRUrfnUJxtRrrM',4,1,4,'2021-09-08 15:51:00.493679','2021-09-08 15:51:00.493679',NULL);
+INSERT INTO `oauth2_provider_refreshtoken` VALUES (1,'frzbxvd7jqxxoJwX3YVL0jtITc6cTS',1,1,1,'2021-09-08 13:17:11.007708','2021-09-08 13:17:11.007708',NULL),(2,'UfEIVM0ObidvW6HHf5DkkKPeG5Qf2S',2,1,1,'2021-09-08 13:56:37.160630','2021-09-08 13:56:37.160630',NULL),(3,'XmZNw2lk6aUinGSOPeJIVtnROfh8cn',3,1,4,'2021-09-08 14:00:20.074956','2021-09-08 14:00:20.074956',NULL),(4,'LQpEUxFa8LELvwzgTRUrfnUJxtRrrM',4,1,4,'2021-09-08 15:51:00.493679','2021-09-08 15:51:00.493679',NULL),(5,'8QwCcw1FB31UBFE2jr7p0eJEGJ5Dhf',5,1,1,'2021-09-11 07:41:12.222702','2021-09-11 07:41:12.222702',NULL),(6,'nwdEKFbKOqeBacPB45vqolIOHxYFne',6,1,7,'2021-09-12 02:10:28.101516','2021-09-12 02:10:28.101516',NULL),(7,'0GQvFycRAG7fBzU8Mm4j7WH8gtEM1O',7,1,7,'2021-09-12 03:31:11.295010','2021-09-12 03:31:11.295010',NULL),(8,'kJAl3d9jZ8KvcDDJOlT5bivfiKAwJ5',8,1,7,'2021-09-12 03:35:23.102412','2021-09-12 03:35:23.102412',NULL),(9,'vQl5WxImjfI0YrJwf4NABYZA9dg6ih',9,1,7,'2021-09-12 03:42:54.038801','2021-09-12 03:42:54.038801',NULL),(10,'gDXO2XdGdA6Bb94xU11WsHI9XBpJm3',10,1,7,'2021-09-12 03:43:08.862834','2021-09-12 03:43:08.862834',NULL),(11,'Tz63bbN5wG8Uj9IyhFUAy6oCfA8ICj',11,1,2,'2021-09-12 08:24:53.733132','2021-09-12 08:24:53.733132',NULL),(12,'euO9APztHrlGS4K4OBxL70Jiby2GQ6',12,1,2,'2021-09-12 08:49:46.760943','2021-09-12 08:49:46.760943',NULL),(13,'C1cqPFd98X8rc8hoXe9zM2hgyeDLe0',13,1,1,'2021-09-12 09:41:11.129111','2021-09-12 09:41:11.129111',NULL);
 /*!40000 ALTER TABLE `oauth2_provider_refreshtoken` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -948,4 +949,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-09-09 19:01:23
+-- Dump completed on 2021-09-12 19:14:42
