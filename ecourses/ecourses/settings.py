@@ -92,6 +92,16 @@ CORS_ALLOW_HEADERS = [
 INTERNAL_IPS = [
 '127.0.0.1'
 ]
+
+OAUTH2_INFO = {
+    'client_id': '01UlK0cdqiqdq46sXOdXcfWPGcSXgNzZtMAYnUVf',
+    'client_secret': '4xW4BIeBa5899j9L58UUCYsNIFrJ3QLC0euywLHJRlufHSqLy1yWBwRbZlKcBUJ1rBRwnnBRoLzAQLWFbHCdBNwhceHtVy3slnVfwDrbIZK9vagnnQCt4YS9gIGNcfsn',
+}
+
+# AUTHENTICATION_BACKENDS = (
+#    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+#    'django.contrib.auth.backends.ModelBackend',
+# )
 ROOT_URLCONF = 'ecourses.urls'
 
 TEMPLATES = [
