@@ -8,9 +8,9 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
-from .models import Course
 from .paginator import *
 from .serializers import *
+from .permissions import *
 
 class AuthInfo(APIView):
     def get(self, request):
@@ -20,10 +20,21 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, ]
+    # permission_classes = [permissions.IsAuthenticated()]
 
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
         return Response(self.serializer_class(request.user).data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path="unactive-user", url_name="unactive-user")
+    def unactive_user(self, request):
+        try:
+            u = User.objects.get(pk=request.user.id)
+            u.is_active = False
+            u.save()
+            return Response(status=status.HTTP_200_OK, data="done")
+        except: return Response(status=status.HTTP_400_BAD_REQUEST, data="failed")
+
 
     def get_permissions(self):
         if self.action == 'get_current_user':
@@ -32,9 +43,12 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         return [permissions.AllowAny()]
 
 
-class TeacherViewSet(viewsets.ViewSet):
+class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
+    # permission_classes = [IsOwnerOrReadOnly]
+
+
 
     # def get_permissions(self):
     #     if(self.action=='list'):
@@ -54,19 +68,23 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     serializer_class = CourseSerializer
     pagination_class = BasePaginator
     # parser_classes = [MultiPartParser, ]
+    permission_classes = [CoursePerm]
 
     def retrieve(self, request, pk=None):
-        queryset = self.query.get(pk=pk)
-        serializer = CoursesItemSerializer(queryset, context={"request":request})
-        return Response(serializer.data)
+        try:
+            queryset = self.query.get(pk=pk)
+            serializer = CoursesItemSerializer(queryset, context={"request": request})
+            return Response(serializer.data)
+        except: return Response(status=status.HTTP_400_BAD_REQUEST, data="failed")
 
-    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses')
+    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses',)
     def hide_courses(self, request, pk=None):
+        self.check_object_permissions(request, Course.objects.get(pk=pk))
         try:
             c = Course.objects.get(pk=pk)
             c.active = False
             c.save()
-        except Course.DoesNotExit:
+        except :
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
 
@@ -82,12 +100,24 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(methods=['get'], detail=True, name='lesson', url_path='lesson', url_name='lesson')
     def lesson(self, request, pk=None):
-        kw = request.query_params.get('kw', None)
-        course = Course.objects.get(pk=pk)
-        queryset = course.lessons.all()
-        if kw is not None:
-            queryset = queryset.filter(subject__icontains=kw)
-        return Response(status=status.HTTP_200_OK, data=LessonSerializer(queryset, many=True, context={'request': request}).data)
+        try:
+            kw = request.query_params.get('kw', None)
+            course = Course.objects.get(pk=pk)
+            queryset = course.lessons.all()
+            if kw is not None:
+                queryset = queryset.filter(subject__icontains=kw)
+            return Response(status=status.HTTP_200_OK,
+                            data=LessonSerializer(queryset, many=True, context={'request': request}).data)
+        except: return Response(status=status.HTTP_400_BAD_REQUEST, data="failed")
+
+
+    @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')
+    def change_status(self, request, pk=None):
+        try:
+            course = Course.objects.get(pk=pk)
+            course.is_public = not(course.is_public)
+            return Response(status=status.HTTP_200_OK, data="Success")
+        except : return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
 
     @action(methods=['post'], detail=True, name='add tag', url_path='add-tag', url_name='add-tag')
     def add_tag(self, request, pk=None):
@@ -114,8 +144,14 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
             queryset = queryset.filter(description__icontains=kw)
         return queryset
 
+    # def get_permissions(self):
+    #     if(self.action=='list'):
+    #         return [permissions.AllowAny()]
+    #     else:
+    #         return [IsOwner()]
 
-class CategoryViewSet(viewsets.ViewSet):
+
+class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     # permission_classes = [permissions.IsAuthenticated]

@@ -56,6 +56,7 @@ class Tag(models.Model):
 
 class Course(ModelBase):
     name_course = models.CharField(max_length=200,null=False,default=None)
+    subject = models.TextField(null=True)
     description = models.TextField(null=True,default="Chưa có mô tả Khóa Học")
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True)
     tags = models.ManyToManyField('Tag', blank=True,related_name='course')

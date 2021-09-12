@@ -20,5 +20,6 @@ router.register('join',views.JoinViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('oauth2-info', views.AuthInfo.as_view())
+    path('oauth2-info', views.AuthInfo.as_view()),
+    path('api-auth/', include('rest_framework.urls'))
 ]
