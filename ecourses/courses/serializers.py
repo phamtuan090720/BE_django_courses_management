@@ -70,13 +70,14 @@ class CourseSerializer(ModelSerializer):
     category = serializers.SlugRelatedField(read_only=True, slug_field='name')
     teacher = TeacherField(read_only=True)
     rate = serializers.SerializerMethodField('rate_avg')
+    tags = TagSerializer(many=True)
     def rate_avg(self, course):
         point = course.student_join.aggregate(Avg('rate')) # trung bình điểm rating
         return point['rate__avg']
     class Meta:
         model = Course
         fields = ['id', 'name_course','category', 'description','image', 'created_date', 'active', 'fee',
-                  'is_public', 'teacher', 'rate']
+                  'is_public', 'teacher', 'rate','tags']
 
 
 class CoursesItemSerializer(serializers.ModelSerializer):
