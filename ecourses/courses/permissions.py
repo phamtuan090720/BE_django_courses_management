@@ -10,5 +10,6 @@ class CoursePerm(BasePermission):
         return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        if view.action == 'Hide this courses':
+        if view.action == 'hide_courses':
             return obj.teacher.user == request.user
+        # return True
