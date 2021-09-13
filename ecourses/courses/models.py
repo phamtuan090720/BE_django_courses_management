@@ -85,7 +85,7 @@ class Lesson(ModelBase):
         unique_together = ('subject', 'course')
     subject = models.CharField(max_length=255)
     content = models.TextField()
-    course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='lessons',related_query_name='my_lession')
+    course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='lessons',related_query_name='my_lesson')
     image = models.ImageField(upload_to='static/courses/%Y/%m/',null=True, blank=True)
     def __str__(self):
         return self.subject
@@ -94,7 +94,7 @@ class Video(models.Model):
 
     subject =  models.CharField(max_length=255)
     url_video = models.CharField(max_length=255)
-    lession = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_video',
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_video',
                                related_query_name='list_video_lesson')
     def __str__(self):
         return self.subject
@@ -102,7 +102,7 @@ class Video(models.Model):
 class File(models.Model):
     subject = models.CharField(max_length=255)
     file = models.FileField(upload_to='static/file/%Y/%m')
-    lession = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_file',
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_file',
                                 related_query_name='list_file_lesson')
     def __str__(self):
         return self.subject
