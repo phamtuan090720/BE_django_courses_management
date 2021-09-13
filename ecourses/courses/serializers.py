@@ -41,6 +41,10 @@ class JoinSerializer(ModelSerializer):
         model = Student_Course
         fields = ['id', 'student', 'course', 'join_date', 'rate', 'review']
 
+class VideoSerializer(ModelSerializer):
+    class Meta:
+        model = Video
+        fields = ['id', 'subject', 'url_video', 'lession']
 
 class LessonSerializer(ModelSerializer):
     class Meta:
@@ -48,9 +52,10 @@ class LessonSerializer(ModelSerializer):
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
 
 class LessonField(ModelSerializer):
+    list_video = serializers.SlugRelatedField(many=True ,read_only=True, slug_field='subject')
     class Meta:
         model = Lesson
-        fields = [ 'subject', 'image']
+        fields = [ 'subject', 'image', 'list_video']
 class InfoField(ModelSerializer):
     class Meta:
         model = User
@@ -113,10 +118,6 @@ class FileSerializer(ModelSerializer):
         model = File
         fields = ['id', 'subject', 'file', 'lession']
 
-class VideoSerializer(ModelSerializer):
-    class Meta:
-        model = Video
-        fields = ['id', 'subject', 'url_video', 'lession']
 
 class FollowSerializer(ModelSerializer):
     class Meta:
