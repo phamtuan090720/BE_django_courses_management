@@ -99,7 +99,9 @@ OAUTH2_INFO = {
     'client_id': '01UlK0cdqiqdq46sXOdXcfWPGcSXgNzZtMAYnUVf',
     'client_secret': '4xW4BIeBa5899j9L58UUCYsNIFrJ3QLC0euywLHJRlufHSqLy1yWBwRbZlKcBUJ1rBRwnnBRoLzAQLWFbHCdBNwhceHtVy3slnVfwDrbIZK9vagnnQCt4YS9gIGNcfsn',
 }
-
+OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+}
 # AUTHENTICATION_BACKENDS = (
 #    'rest_framework_social_oauth2.backends.DjangoOAuth2',
 #    'django.contrib.auth.backends.ModelBackend',
@@ -133,7 +135,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecoursedb',
         'USER':'root',
-        'PASSWORD':'12345',
         'HOST':''
     }
 }
