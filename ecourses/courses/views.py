@@ -24,7 +24,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
-        return Response(self.serializer_class(request.user).data, status=status.HTTP_200_OK)
+        return Response(self.serializer_class(request.user,context={"request": request}).data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path="unactive-user", url_name="unactive-user")
     def unactive_user(self, request):

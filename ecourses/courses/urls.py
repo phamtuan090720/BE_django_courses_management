@@ -3,7 +3,7 @@ from . import views
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register('category',views.CategoryViewSet)
-router.register('coures',views.CourseViewSet)
+router.register('courses',views.CourseViewSet)
 router.register('lesson',views.LessonViewSet)
 router.register('user',views.UserViewSet)
 router.register('tag',views.TagViewSet)
