@@ -47,23 +47,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
 
-    @action(methods=['post'], detail=False, url_path="access-course", url_name="access-course")
-    def access_course(self, request):
-        try:
-            u = User.objects.get(pk=request.user.id)
-            course_id = request.data['course_id']
-            course = Course.objects.get(pk=course_id)
-            if not course is not None:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = "+course_id)
-            access = Student_Course.objects.get_or_create(student=u, course=course)
-            if not(access[1]):
-                return Response(status=status.HTTP_200_OK, data="User joined this course")
-            access[0].save()
-            return Response(status=status.HTTP_200_OK, data="Access to course successfully")
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
-
-                # điều kiện để rating?
     @action(methods=['post'], detail=False, url_path="follow", url_name="follow")
     def follow(self, request):
         try:
@@ -80,6 +63,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed, Please check the request again')
 
+    # điều kiện để rating?
     @action(methods=['post'], detail=False, url_path="rating", url_name="rating")
     def rating(self, request):
         try:
@@ -156,7 +140,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses',)
     def hide_courses(self, request, pk=None):
         c = Course.objects.get(pk=pk)
-        self.check_object_permissions(request, c.teacher)
+        self.check_object_permissions(request, c)
         try:
             c.active = False
             c.save()
@@ -167,7 +151,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     @action(methods=['get'], detail=True, name='Open this courses', url_path='open-courses', url_name='open-courses')
     def open_courses(self, request, pk=None):
         c = Course.objects.get(pk=pk)
-        self.check_object_permissions(request, c.teacher)
+        self.check_object_permissions(request, c)
         try:
             c.active = True
             c.save()
@@ -180,7 +164,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         try:
             kw = request.query_params.get('kw', None)
             course = Course.objects.get(pk=pk)
-            self.check_object_permissions(request, course)
+            self.check_object_permissions(request, course.teacher)
             queryset = course.lessons.all()
             if kw is not None:
                 queryset = queryset.filter(subject__icontains=kw)
@@ -192,7 +176,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')
     def change_status(self, request, pk=None):
         c = Course.objects.get(pk=pk)
-        self.check_object_permissions(request, c.teacher)
+        self.check_object_permissions(request, c)
         try:
             c.is_public = not(c.is_public)
             c.save()
@@ -203,17 +187,107 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     def add_tag(self, request, pk=None):
         try:
             c = Course.objects.get(pk=pk)
+            self.check_object_permissions(request, c)
         except :
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             data = request.data['name']
             if data is not None:
-                # for tag in data:
                 c.tags.add(Tag.objects.get_or_create(name = data)[0])
             c.save()
             return Response(status=status.HTTP_201_CREATED, data=CoursesItemSerializer(c, context={'request': request}).data)
 
-    def get_queryset(self):
+    @action(methods=['get'], detail=True, url_path="access-course", url_name="access-course")
+    def access_course(self, request, pk=None):
+        try:
+            u = User.objects.get(pk=request.user.id)
+            course = Course.objects.get(pk=pk)
+            try:
+                teacher = course.teacher.user
+                if teacher == u:
+                    return Response(status=status.HTTP_400_BAD_REQUEST, data="Teacher id duplicate with student id")
+            except : return Response(status=status.HTTP_400_BAD_REQUEST, data="err")
+            if course is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + pk)
+            access = Student_Course.objects.get_or_create(student=u, course=course)
+            if not (access[1]):
+                return Response(status=status.HTTP_200_OK, data="User joined this course")
+            if course.is_public:
+                access[0].save()
+            else:
+                access[0].access = False
+                access[0].save()
+                return Response(status=status.HTTP_200_OK, data="This course is private, please wait owner access")
+            return Response(status=status.HTTP_200_OK, data="Access to course successfully")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+
+    @action(methods=['get'], detail=True, name="Get students access to course", url_path="get-request", url_name="get-request")
+    def get_request(self, request, pk=None):
+        try:
+            course = Course.objects.get(pk=pk)
+            self.check_object_permissions(request, course)
+            if not course is not None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + pk)
+            student_course = Student_Course.objects.filter(course = course)
+            if not (student_course):
+                return Response(status=status.HTTP_200_OK, data="This course don't have student access to")
+            listSt = []
+            for sc in student_course:
+                if not sc.access:
+                    listSt.append(sc)
+            if not listSt:
+                return Response(status=status.HTTP_200_OK, data="No have new access")
+            else:
+                return Response(status=status.HTTP_200_OK, data=Student_CourseSerializer(listSt, many=True).data)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+
+    @action(methods=['post'], detail=True, name='delete student', url_path='delete-student', url_name='delete-student')
+    def delete_student(self, request, pk=None):
+        try:
+            c = Course.objects.get(pk=pk)
+            teacher = User.objects.get(pk=request.user.id)
+            self.check_object_permissions(request, c)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any course pk = " + pk)
+        else:
+            try:
+                student = User.objects.get(pk=request.data["student_id"])
+            except: return Response(status=status.HTTP_400_BAD_REQUEST, data="No student has pk =" + str(request.data["student_id"]))
+            try:
+                student_course = Student_Course.objects.get(course=c, student=student)
+            except: return Response(status=status.HTTP_200_OK, data="This student don't access this course")
+            student_course.delete()
+
+            return Response(status=status.HTTP_201_CREATED,
+                            data="Delete success")
+
+    @action(methods=['post'], detail=True, name='accept student join to private course', url_path='accept-student', url_name='accept-student')
+    def accept_student(self, request, pk=None):
+        try:
+            c = Course.objects.get(pk=pk)
+            teacher = User.objects.get(pk=request.user.id)
+            self.check_object_permissions(request, c)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any course pk = " + pk)
+        else:
+            try:
+                student = User.objects.get(pk=request.data["student_id"])
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data="No student has pk =" + str(request.data["student_id"]))
+            try:
+                student_course = Student_Course.objects.get(course=c, student=student)
+            except:
+                return Response(status=status.HTTP_200_OK, data="This student don't access this course")
+            student_course.access = True
+            student_course.save()
+            return Response(status=status.HTTP_201_CREATED,
+                            data="Accept student success")
+
+
+def get_queryset(self):
         queryset = Course.objects.all()
         cate_id = self.request.query_params.get('category_id', None)
         kw = self.request.query_params.get('kw', None)
