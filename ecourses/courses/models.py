@@ -74,6 +74,7 @@ class Student_Course(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='course_join')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=False, related_name='student_join')
     join_date = models.DateTimeField(auto_now_add=True)
+    access = models.BooleanField(default=True)
     rate = models.IntegerField(null=True, blank=True, validators =[
                                             MaxValueValidator(5),
                                             MinValueValidator(0)

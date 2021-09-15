@@ -11,11 +11,11 @@ class CoursePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
-        elif view.action in ['hide_courses', 'open_courses', 'change_status', 'add_tag']\
+        elif view.action in ['hide_courses', 'open_courses', 'change_status', 'add_tag', 'delete_student', 'accept_student'] \
                 or request.method in ['PUT', 'PATCH']:
-            return obj.user == request.user
+            return obj.teacher.user == request.user
         elif view.action == 'lesson':
-            if obj.teacher.user == request.user or obj.student_join == request.user:
+            if obj.user == request.user or obj.student_join == request.user:
                 return True
             return False
 
