@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
@@ -5,9 +6,17 @@ from .models import *
 
 
 class UserSerializer(ModelSerializer):
+    user_type = serializers.SerializerMethodField('type')
+
+    def type(self, user):
+        try:
+            u = user.teacher
+            return "Teacher"
+        except ObjectDoesNotExist:
+            return "User"
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'avatar', 'email', 'date_joined']
+        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'avatar', 'email', 'date_joined', 'user_type']
         extra_kwargs = {
             'password': {'write_only': 'true'},
         }

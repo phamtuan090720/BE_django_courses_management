@@ -306,7 +306,53 @@ class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.Retriev
 class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+    parser_classes = [MultiPartParser, JSONParser]
 
+    @action(methods=['post'], detail=True, url_path="add-video", url_name="add-video")
+    def add_video(self, request, pk=None):
+        try:
+            lesson = Lesson.objects.get(pk=pk)
+            subject = request.data['subject']
+            url = request.data['url']
+            video = Video.objects.get_or_create(url_video=url, subject=subject)
+            lesson.list_video = video
+            lesson.save()
+            return Response(status=status.HTTP_200_OK, data="Successfully")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+
+    @action(methods=['post'], detail=True, url_path="add-file", url_name="add-file")
+    def add_file(self, request, pk=None):
+        try:
+            lesson = Lesson.objects.get(pk=pk)
+            file = request.data['file']
+            subject = request.data['subject']
+            file = File.objects.get_or_create(file=file, subject=subject)
+            lesson.list_file = file
+            lesson.save()
+            return Response(status=status.HTTP_200_OK, data="Successfully")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+
+    @action(methods=['post'], detail=True, url_path="add-homework", url_name="add-homework")
+    def add_homework(self, request, pk=None):
+        try:
+            lesson = Lesson.objects.get(pk=pk)
+            homework = HomeWork.objects.create(subject=request.data['subject'],
+                                               file=request.data['file'],
+                                               content=request.data['content'],
+                                               author_teacher=request.user,
+                                               lesson=lesson)
+            homework.save()
+            return Response(status=status.HTTP_200_OK, data="Successfully")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+
+    # def get_permissions(self):
+    #     if self.action == 'add_video':
+    #         return [permissions.IsAuthenticated()]
+    #
+    #     return [permissions.AllowAny()]
 
 class HomeWorkViewSet(viewsets.ViewSet):
     queryset = HomeWork.objects.all()
