@@ -80,6 +80,9 @@ class Student_Course(models.Model):
                                             MinValueValidator(0)
                                         ])
     review = models.TextField(blank=True, null=True)
+    def __str__(self):
+        return str(self.student)+ " joned " + str(self.course)
+
 
 class Lesson(ModelBase):
     class Meta:

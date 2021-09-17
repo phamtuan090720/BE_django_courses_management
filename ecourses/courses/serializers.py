@@ -65,7 +65,7 @@ class Student_CourseSerializer(ModelSerializer):
     student = InfoField(read_only=True)
     class Meta:
         model = Student_Course
-        fields = ['student','rate', 'review']
+        fields = ['student','rate', 'review','access']
 class TeacherField(ModelSerializer):
     user = InfoField(read_only=True)
     class Meta:
