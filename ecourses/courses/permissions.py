@@ -12,8 +12,8 @@ class CoursePermission(BasePermission):
         if request.user.is_superuser:
             return True
         elif view.action in ['hide_courses', 'open_courses', 'change_status', 'add_tag', 'delete_student', 'accept_student'] \
-                or request.method in ['PUT', 'PATCH']:
-            return obj.teacher.user == request.user
+                or request.method in ['PUT', 'PATCH', 'DELETE']:
+            return obj.teacher.activeTeacher and  obj.teacher.user == request.user
         elif view.action == 'lesson':
             if obj.user == request.user or obj.student_join == request.user:
                 return True
@@ -26,3 +26,18 @@ class UserPermission(BasePermission):
         if request.method in SAFE_METHODS or view.action == "create" :
             return True
         return request.user.is_authenticated
+
+class TeacherPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+        elif view.action == 'get_list_courses' or request.method in ['PUT','PATCH']:
+            return obj.activeTeacher and  obj.user == request.user
+
+
+

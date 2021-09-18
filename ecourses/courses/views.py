@@ -92,9 +92,16 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         return [permissions.AllowAny()]
 
 
-class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
+class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
+    permission_classes = [TeacherPermission]
+
+    @action(methods=['get'], detail=True, name='Get list Course', url_path='get-list-courses', url_name='get-list-courses', )
+    def get_list_courses(self, request, pk=None):
+        teacher = self.get_object()
+        c= teacher.course
+        return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, many=True, context={'request': request}).data)
 
     @action(methods=['post'],detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
     def register_teacher(self, request):
@@ -116,13 +123,14 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
         return Response(status=status.HTTP_201_CREATED, data=self.serializer_class(teacher).data)
 
 
+
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = BasePaginator
 
 
-class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView):
+class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView, generics.DestroyAPIView):
     queryset = Course.objects.all()
     query = Course.objects
     serializer_class = CourseSerializer
@@ -303,7 +311,7 @@ class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.Retriev
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
+class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.DestroyAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, JSONParser]
@@ -348,11 +356,7 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
 
-    # def get_permissions(self):
-    #     if self.action == 'add_video':
-    #         return [permissions.IsAuthenticated()]
-    #
-    #     return [permissions.AllowAny()]
+
 
 class HomeWorkViewSet(viewsets.ViewSet):
     queryset = HomeWork.objects.all()
