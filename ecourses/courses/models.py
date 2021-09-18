@@ -25,6 +25,9 @@ class Teacher(models.Model):
     def __str__(self):
         return str(self.user)
 
+    class Meta:
+        ordering = ['activeTeacher']
+
 
 class Follow(models.Model):
     class Meta:
@@ -49,6 +52,7 @@ class ModelBase(models.Model):
         abstract = True
         ordering = ['-id'] # sắp giảm theo id
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=100,unique=True)
     def __str__(self):
@@ -67,6 +71,9 @@ class Course(ModelBase):
     # students = models.ManyToManyField('User',blank=True,related_name='course')
     def __str__(self):
         return self.name_course
+
+    class Meta:
+        ordering = ['-id']
 
 class Student_Course(models.Model):
     class Meta:

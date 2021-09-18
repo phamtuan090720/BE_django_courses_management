@@ -10,9 +10,11 @@ class UserSerializer(ModelSerializer):
 
     def type(self, user):
         try:
-            u = user.teacher
-            return "Teacher"
-        except ObjectDoesNotExist:
+            u = user.teacher.activeTeacher
+            if u:
+                return "Teacher"
+            return "User"
+        except :
             return "User"
     class Meta:
         model = User
