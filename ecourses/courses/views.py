@@ -8,6 +8,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
 
+
 from .paginator import *
 from .serializers import *
 from .permissions import *
@@ -22,9 +23,25 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [UserPermission]
 
+
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
         return Response(self.serializer_class(request.user,context={"request": request}).data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path="course", url_name='get-courses-registered')
+    def get_courses_registered(self, request):
+        list = Student_Course.objects.filter(student=request.user.id,access=True)
+        list_course = []
+        try:
+            if list is not None:
+                if(len(list)>0):
+                    for i in list:
+                        list_course.append(i.course)
+                else:
+                    return Response(status=status.HTTP_200_OK,data={"mess":"the user has not registered for any courses yet"})
+        except:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(data={"list_course":CourseSerializer(list_course,many=True,context={"request": request}).data},status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path="unactive-user", url_name="unactive-user")
     def unactive_user(self, request):
@@ -85,15 +102,15 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
 
 
-    def get_permissions(self):
-        if self.action == 'get_current_user':
-            return [permissions.IsAuthenticated()]
-
-        return [permissions.AllowAny()]
+    # def get_permissions(self):
+    #     if self.action == 'get_current_user':
+    #         return [permissions.IsAuthenticated()]
+    #
+    #     return [permissions.AllowAny()]
 
 
 class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.UpdateAPIView):
-    queryset = Teacher.objects.all()
+    queryset = Teacher.objects.filter(activeTeacher=True)
     serializer_class = TeacherSerializer
     permission_classes = [TeacherPermission]
 
@@ -295,16 +312,16 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                             data="Accept student success")
 
 
-def get_queryset(self):
-        queryset = Course.objects.all()
-        cate_id = self.request.query_params.get('category_id', None)
-        kw = self.request.query_params.get('kw', None)
-
-        if cate_id:
-            queryset = queryset.filter(category=cate_id)
-        if kw:
-            queryset = queryset.filter(description__icontains=kw)
-        return queryset
+# def get_queryset(self):
+#         queryset = Course.objects.all()
+#         cate_id = self.request.query_params.get('category_id', None)
+#         kw = self.request.query_params.get('kw', None)
+#
+#         if cate_id:
+#             queryset = queryset.filter(category=cate_id)
+#         if kw:
+#             queryset = queryset.filter(description__icontains=kw)
+#         return queryset
 
 
 class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
