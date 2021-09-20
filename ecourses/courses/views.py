@@ -40,7 +40,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
                     return Response(status=status.HTTP_200_OK,data={"mess":"the user has not registered for any courses yet"})
             page = self.paginate_queryset(list_course)
             if page is not None:
-                serializer = CourseSerializer(page,many=True)
+                serializer = CourseSerializer(page,many=True,context={"request": request})
                 return self.get_paginated_response(serializer.data)
         except:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
