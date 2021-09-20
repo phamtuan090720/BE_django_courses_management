@@ -7,8 +7,7 @@ from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
-
-
+from django.core.paginator import Paginator
 from .paginator import *
 from .serializers import *
 from .permissions import *
@@ -22,7 +21,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [UserPermission]
-
+    pagination_class = UserPaginator
 
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
@@ -30,18 +29,25 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
     @action(methods=['get'], detail=False, url_path="course", url_name='get-courses-registered')
     def get_courses_registered(self, request):
-        list = Student_Course.objects.filter(student=request.user.id,access=True)
+        courses = Student_Course.objects.filter(student=request.user.id,access=True)
         list_course = []
         try:
-            if list is not None:
-                if(len(list)>0):
-                    for i in list:
+            if courses is not None:
+                if(len(courses)>0):
+                    for i in courses:
                         list_course.append(i.course)
                 else:
                     return Response(status=status.HTTP_200_OK,data={"mess":"the user has not registered for any courses yet"})
+            page = self.paginate_queryset(list_course)
+            if page is not None:
+                serializer = CourseSerializer(page,many=True)
+                return self.get_paginated_response(serializer.data)
         except:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(data={"list_course":CourseSerializer(list_course,many=True,context={"request": request}).data},status=status.HTTP_200_OK)
+        return Response(data={
+            "list_course":CourseSerializer(list_course,many=True,context={"request": request}).data,
+            "count":len(list)
+        },status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path="unactive-user", url_name="unactive-user")
     def unactive_user(self, request):
