@@ -76,9 +76,6 @@ class HomeWorkSerializer(ModelSerializer):
         }
 
 class LessonSerializer(ModelSerializer):
-    # list_video = VideoSerializer(many=True)
-    # list_file = FileSerializer(many=True)
-    # home_work = HomeWorkSerializer(many=True)
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']

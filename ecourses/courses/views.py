@@ -194,14 +194,13 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         self.pagination_class = LessonPaginator
         try:
             lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('id')
-            print(lessons)
             kw = request.query_params.get('kw')
             if kw is not None:
                 lessons = lessons.filter(subject__icontains=kw)
             page = self.paginate_queryset(lessons)
             if page is not None:
                 serializer = LessonSerializer(page,many=True,context={"request":request})
-                return self.get_paginated_response(serializer.data)
+                return self.get_paginated_response(data={"info":CourseSerializer(Course.objects.get(pk=pk)).data,"list-lesson":serializer.data})
         except: return Response(status=status.HTTP_404_NOT_FOUND,data={"Course is not found"})
 
 
