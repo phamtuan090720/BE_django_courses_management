@@ -7,7 +7,6 @@ from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
-from django.core.paginator import Paginator
 from .paginator import *
 from .serializers import *
 from .permissions import *
@@ -189,19 +188,21 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         except :
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
-
+    # Lấy bài học của khóa học.
     @action(methods=['get'], detail=True, name='lesson', url_path='lesson', url_name='lesson')
     def lesson(self, request, pk=None):
+        self.pagination_class = LessonPaginator
         try:
-            kw = request.query_params.get('kw', None)
-            course = Course.objects.get(pk=pk)
-            self.check_object_permissions(request, course.teacher)
-            queryset = course.lessons.all()
+            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('id')
+            print(lessons)
+            kw = request.query_params.get('kw')
             if kw is not None:
-                queryset = queryset.filter(subject__icontains=kw)
-            return Response(status=status.HTTP_200_OK,
-                            data=LessonSerializer(queryset, many=True, context={'request': request}).data)
-        except: return Response(status=status.HTTP_400_BAD_REQUEST)
+                lessons = lessons.filter(subject__icontains=kw)
+            page = self.paginate_queryset(lessons)
+            if page is not None:
+                serializer = LessonSerializer(page,many=True,context={"request":request})
+                return self.get_paginated_response(serializer.data)
+        except: return Response(status=status.HTTP_404_NOT_FOUND,data={"Course is not found"})
 
 
     @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')

@@ -55,9 +55,30 @@ class JoinSerializer(ModelSerializer):
 class VideoSerializer(ModelSerializer):
     class Meta:
         model = Video
-        fields = ['id', 'subject', 'url_video', 'lession']
+        fields = ['id', 'subject', 'url_video', 'lesson']
+        extra_kwargs = {
+            'lesson': {'write_only': 'true'},
+        }
+class FileSerializer(ModelSerializer):
+    class Meta:
+        model = File
+        fields = ['id', 'subject', 'file', 'lesson']
+        extra_kwargs = {
+            'lesson': {'write_only': 'true'},
+        }
+
+class HomeWorkSerializer(ModelSerializer):
+    class Meta:
+        model = HomeWork
+        fields = ['id', 'author_teacher', 'lesson', 'subject', 'file', 'content']
+        extra_kwargs = {
+            'lesson': {'write_only': 'true'},
+        }
 
 class LessonSerializer(ModelSerializer):
+    # list_video = VideoSerializer(many=True)
+    # list_file = FileSerializer(many=True)
+    # home_work = HomeWorkSerializer(many=True)
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
@@ -124,10 +145,7 @@ class HomeWorkSerializer(ModelSerializer):
         fields = ['id', 'author_teacher', 'lesson', 'subject', 'file', 'content']
 
 
-class FileSerializer(ModelSerializer):
-    class Meta:
-        model = File
-        fields = ['id', 'subject', 'file', 'lession']
+
 
 
 class FollowSerializer(ModelSerializer):

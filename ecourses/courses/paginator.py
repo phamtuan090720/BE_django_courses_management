@@ -5,3 +5,6 @@ class  BasePaginator(PageNumberPagination):
 
 class UserPaginator(PageNumberPagination):
         page_size = 10
+
+class LessonPaginator(PageNumberPagination):
+        page_size = 10
