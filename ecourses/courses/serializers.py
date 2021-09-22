@@ -82,6 +82,13 @@ class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
+class DetailLessonSerializer(ModelSerializer):
+    list_video = VideoSerializer(many=True)
+    list_file = FileSerializer(many=True)
+    home_work = HomeWorkSerializer(many=True)
+    class Meta:
+        model = Lesson
+        fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active',"list_video","list_file","home_work"]
 
 class LessonField(ModelSerializer):
     list_video = serializers.SlugRelatedField(many=True ,read_only=True, slug_field='subject')

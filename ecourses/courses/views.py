@@ -339,6 +339,29 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, JSONParser]
+    permission_classes = [IsAuthenticated]
+
+## ghi đè lại lấy chi tiết bài học
+    def retrieve(self, request, pk=None):
+        try:
+            self.serializer_class = DetailLessonSerializer
+            instance = self.get_object()
+            course = Course.objects.get(pk=instance.course.pk)
+            ## kiểm tra xem có phải là giáo viên không.
+            if request.user == course.teacher.user:
+                serializer = self.get_serializer(instance)
+                return Response(serializer.data)
+            else:
+                student_course = Student_Course.objects.filter(course=instance.course)
+                ## kiểm tra bằng hàm filter xem học sinh đã đăng ký khóa học này chưa
+                result = filter(lambda x: x.student == request.user and x.access == True, student_course)
+                if list(result):
+                    serializer = self.get_serializer(instance)
+                    return Response(serializer.data)
+                else:
+                    return Response(status=status.HTTP_403_FORBIDDEN,data={"The lesson is in a course you haven't registered yet"})
+        except:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(methods=['post'], detail=True, url_path="add-video", url_name="add-video")
     def add_video(self, request, pk=None):
