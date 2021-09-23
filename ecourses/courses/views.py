@@ -208,6 +208,8 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     @action(methods=['get'], detail=True, name='complete_lesson', url_path='complete', url_name='complete')
     def complete_lesson(self,request, pk=None):
         self.pagination_class = LessonPaginator
+        if Course.objects.get(pk=pk).teacher.user==request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN,data={"You are the creator of the course!"})
         try:
             ## sắp xếp theo ngày tạo mới nhất và active = True
             lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
