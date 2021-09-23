@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from .paginator import *
 from .serializers import *
 from .permissions import *
+from .models import *
 
 class AuthInfo(APIView):
     def get(self, request):
@@ -204,6 +205,22 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 return self.get_paginated_response(data={"info":CourseSerializer(Course.objects.get(pk=pk)).data,"list-lesson":serializer.data})
         except: return Response(status=status.HTTP_404_NOT_FOUND,data={"Course is not found"})
 
+    @action(methods=['get'], detail=True, name='complete_lesson', url_path='complete', url_name='complete')
+    def complete_lesson(self,request, pk=None):
+        self.pagination_class = LessonPaginator
+        try:
+            ## sắp xếp theo ngày tạo mới nhất và active = True
+            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
+            kw = request.query_params.get('kw')
+            if kw is not None:
+                lessons = lessons.filter(subject__icontains=kw)
+            page = self.paginate_queryset(lessons)
+            if page is not None:
+                serializer = LessonSerializerRequestUser(page, many=True, context={"request": request})
+                return self.get_paginated_response(
+                    data={"info": CourseSerializer(Course.objects.get(pk=pk),context={"request": request}).data, "list-lesson": serializer.data})
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"Course is not found"})
 
     @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')
     def change_status(self, request, pk=None):

@@ -4,7 +4,6 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
 
-
 class UserSerializer(ModelSerializer):
     user_type = serializers.SerializerMethodField('type')
 
@@ -74,11 +73,38 @@ class HomeWorkSerializer(ModelSerializer):
         extra_kwargs = {
             'lesson': {'write_only': 'true'},
         }
+class Student_Lesson(ModelSerializer):
+    class Meta:
+        model = Student_Lesson
+        fields = ['complete']
+
+
+
+
+
 
 class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active']
+
+class LessonSerializerRequestUser(ModelSerializer):
+    complete = serializers.SerializerMethodField('student_complete')
+
+    def student_complete(self,lesson):
+        request = self.context['request']
+        try:
+            if request:
+                lesson_user = lesson.lesson_student.get(lesson=lesson, student=request.user)
+                return lesson_user.complete
+            else:
+                return None
+        except:
+            return False
+    class Meta:
+        model = Lesson
+        fields = LessonSerializer.Meta.fields + ['complete']
+
 class DetailLessonSerializer(ModelSerializer):
     list_video = VideoSerializer(many=True)
     list_file = FileSerializer(many=True)

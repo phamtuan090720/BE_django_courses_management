@@ -4,7 +4,9 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS, IsAuthentic
 
 class CoursePermission(BasePermission):
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
+        if view.action in ["complete_lesson"]:
+            return request.user.is_authenticated
+        elif request.method in SAFE_METHODS:
             return True
         return request.user.is_authenticated
     def has_object_permission(self, request, view, obj):
