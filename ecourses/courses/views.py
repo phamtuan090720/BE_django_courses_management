@@ -193,7 +193,8 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     def lesson(self, request, pk=None):
         self.pagination_class = LessonPaginator
         try:
-            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('id')
+            ## sắp xếp theo ngày tạo mới nhất và active = True
+            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
             kw = request.query_params.get('kw')
             if kw is not None:
                 lessons = lessons.filter(subject__icontains=kw)
