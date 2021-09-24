@@ -32,8 +32,8 @@ class Teacher(models.Model):
 class Follow(models.Model):
     class Meta:
         unique_together = ('student', 'teacher')
-    student = models.ForeignKey(User,on_delete=models.CASCADE)
-    teacher = models.ForeignKey(Teacher,on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='followers')
 
     def __str__(self):
         return str(self.student)+' followed '+str(self.teacher)

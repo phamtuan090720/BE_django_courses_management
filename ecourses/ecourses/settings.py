@@ -69,6 +69,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -133,7 +134,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecoursedb',
         'USER':'root',
-        'PASSWORD':'123456',
+        'PASSWORD':'12345',
         'HOST':''
     }
 }

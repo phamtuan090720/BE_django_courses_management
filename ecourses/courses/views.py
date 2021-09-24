@@ -16,7 +16,7 @@ class AuthInfo(APIView):
     def get(self, request):
         return Response(settings.OAUTH2_INFO, status=status.HTTP_200_OK)
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, JSONParser]
@@ -57,6 +57,36 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             u.save()
             return Response(status=status.HTTP_200_OK, data="Successfully")
         except: return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
+
+    @action(methods=['post'], detail=False, url_path='change-password')
+    def change_password(self, request):
+        try:
+            try:
+                u = User.objects.get(pk=request.user.id)
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="get!")
+            try:
+                u.set_password(request.data['password'])
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="change!")
+            try:
+                u.save()
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="save!")
+            return Response(status=status.HTTP_200_OK, data="Change password success!")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed!")
+
+
+    @action(methods=['get'], detail=False, url_path="follower", url_name="get-follower")
+    def follower(self, request):
+        try:
+            u = User.objects.get(pk=request.user.id)
+            flr = u.followers
+            return Response(status=status.HTTP_200_OK, data=InfoTeacherFollowedSerializer(flr, many=True, context={'request': request}).data)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
+
 
     @action(methods=['get'], detail=False, url_path="upgrade-user", url_name="upgrade-user")
     def upgrade_user(self, request):
@@ -119,6 +149,12 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     queryset = Teacher.objects.filter(activeTeacher=True)
     serializer_class = TeacherSerializer
     permission_classes = [TeacherPermission]
+
+    @action(methods=['get'], detail=False, url_path="current-teacher", url_name='get-current-teacher')
+    def get_current_user(self, request):
+        t = Teacher.objects.get(pk=request.user.id)
+        return Response(self.serializer_class(t, context={"request": request}).data,
+                        status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=True, name='Get list Course', url_path='get-list-courses', url_name='get-list-courses', )
     def get_list_courses(self, request, pk=None):
