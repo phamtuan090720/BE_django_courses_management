@@ -32,6 +32,8 @@ class UserSerializer(ModelSerializer):
 
 class TeacherSerializer(ModelSerializer):
     user = UserSerializer()
+    job = serializers.SlugRelatedField(many=False ,read_only=True, slug_field='name_job')
+    skills = serializers.SlugRelatedField(many=True ,read_only=True, slug_field='name_skill')
     class Meta:
         model = Teacher
         fields = ['user', 'activeTeacher', 'skills', 'job']
@@ -175,6 +177,11 @@ class HomeWorkSerializer(ModelSerializer):
         fields = ['id', 'author_teacher', 'lesson', 'subject', 'file', 'content']
 
 
+class InfoTeacherFollowedSerializer(ModelSerializer):
+    teacher = TeacherField(read_only=True)
+    class Meta:
+        model = Follow
+        fields = ['id', 'teacher']
 
 
 
