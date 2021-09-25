@@ -149,6 +149,34 @@ class CourseSerializer(ModelSerializer):
                   'is_public', 'teacher', 'rate','tags']
 
 
+class CourseSerializerRequestUser(ModelSerializer):
+    category = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    teacher = TeacherField(read_only=True)
+    rate = serializers.SerializerMethodField('rate_avg')
+    tags = TagSerializer(many=True)
+    user_review = serializers.SerializerMethodField('get_review_user')
+    def rate_avg(self, course):
+        point = course.student_join.aggregate(Avg('rate')) # trung bình điểm rating
+        return point['rate__avg']
+    def get_review_user(self,course):
+        request = self.context['request']
+        try:
+            student_course = course.student_join.get(student=request.user)
+            return {
+                "user_rate":student_course.rate,
+                "user_comment":student_course.review
+            }
+        except:
+            return {
+                "user_rate": None,
+                "user_comment": None
+            }
+    class Meta:
+        model = Course
+        fields = ['id', 'name_course','category', 'subject', 'description','image', 'created_date', 'active', 'fee',
+                  'is_public', 'teacher', 'rate','tags','user_review']
+
+
 class CoursesItemSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField( read_only=True, slug_field='name')
     tags = TagSerializer(many=True)

@@ -37,17 +37,13 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
                     for i in courses:
                         list_course.append(i.course)
                 else:
-                    return Response(status=status.HTTP_200_OK,data={"mess":"the user has not registered for any courses yet"})
+                    return Response(status=status.HTTP_404_NOT_FOUND,data={"mess":"the user has not registered for any courses yet"})
             page = self.paginate_queryset(list_course)
             if page is not None:
                 serializer = CourseSerializer(page,many=True,context={"request": request})
                 return self.get_paginated_response(serializer.data)
         except:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(data={
-            "list_course":CourseSerializer(list_course,many=True,context={"request": request}).data,
-            "count":len(list)
-        },status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path="unactive-user", url_name="unactive-user")
     def unactive_user(self, request):

@@ -18,7 +18,7 @@ class Skill(models.Model):
     def __str__(self):
         return self.name_skill
 class Teacher(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True  )
+    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
     activeTeacher = models.BooleanField(default=False)
     skills = models.ManyToManyField(Skill,blank=True,related_name='teacher')
     job = models.ForeignKey(Job,on_delete=models.SET_NULL,null=True)

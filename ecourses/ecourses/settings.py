@@ -134,7 +134,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecoursedb',
         'USER':'root',
-        'PASSWORD':'12345',
+        'PASSWORD':'123456',
         'HOST':''
     }
 }
