@@ -80,11 +80,6 @@ class Student_Lesson(ModelSerializer):
         model = Student_Lesson
         fields = ['complete']
 
-
-
-
-
-
 class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
@@ -106,6 +101,25 @@ class LessonSerializerRequestUser(ModelSerializer):
     class Meta:
         model = Lesson
         fields = LessonSerializer.Meta.fields + ['complete']
+
+class DetailLessonSerializerRequestUser(ModelSerializer):
+    complete = serializers.SerializerMethodField('student_complete')
+    list_video = VideoSerializer(many=True)
+    list_file = FileSerializer(many=True)
+    home_work = HomeWorkSerializer(many=True)
+    def student_complete(self,lesson):
+        request = self.context['request']
+        try:
+            if request:
+                lesson_user = lesson.lesson_student.get(lesson=lesson, student=request.user)
+                return lesson_user.complete
+            else:
+                return None
+        except:
+            return False
+    class Meta:
+        model = Lesson
+        fields = LessonSerializer.Meta.fields + ['complete',"list_video","list_file","home_work"]
 
 class DetailLessonSerializer(ModelSerializer):
     list_video = VideoSerializer(many=True)

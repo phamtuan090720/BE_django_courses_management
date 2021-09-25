@@ -7,6 +7,7 @@ from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
+from django.core.exceptions import ObjectDoesNotExist
 from .paginator import *
 from .serializers import *
 from .permissions import *
@@ -234,14 +235,23 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             page = self.paginate_queryset(lessons)
             if page is not None:
                 serializer = LessonSerializer(page,many=True,context={"request":request})
-                return self.get_paginated_response(data={"info":CourseSerializer(Course.objects.get(pk=pk)).data,"list-lesson":serializer.data})
+                return self.get_paginated_response(data={"info":CourseSerializer(Course.objects.get(pk=pk)).data,"list_lesson":serializer.data})
         except: return Response(status=status.HTTP_404_NOT_FOUND,data={"Course is not found"})
 
     @action(methods=['get'], detail=True, name='complete_lesson', url_path='complete', url_name='complete')
     def complete_lesson(self,request, pk=None):
         self.pagination_class = LessonPaginator
-        if Course.objects.get(pk=pk).teacher.user==request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN,data={"You are the creator of the course!"})
+        if Course.objects.get(pk=pk).teacher.user == request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"mess": "You are the creator of the course!"})
+        # kiểm tra xem học sinh đã được xác nhận chưa
+        try:
+            if Course.objects.get(pk=pk).student_join.get(student=request.user).access == False:
+                return Response(status=status.HTTP_403_FORBIDDEN,
+                                data={"mess": "The Teacher has not yet confirm you to the course"})
+        except ObjectDoesNotExist:
+            ## có thể xảy ra trường hợp học sinh chưa đăng ký bắt lỗi xảy ra trường hợp học sinh chưa đăng ký
+            return Response(status=status.HTTP_403_FORBIDDEN,
+                            data={"mess": "You have not registered for the course"})
         try:
             ## sắp xếp theo ngày tạo mới nhất và active = True
             lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
@@ -252,9 +262,9 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             if page is not None:
                 serializer = LessonSerializerRequestUser(page, many=True, context={"request": request})
                 return self.get_paginated_response(
-                    data={"info": CourseSerializer(Course.objects.get(pk=pk),context={"request": request}).data, "list-lesson": serializer.data})
+                    data={"info": CourseSerializerRequestUser(Course.objects.get(pk=pk),context={"request": request}).data, "list_lesson": serializer.data})
         except:
-            return Response(status=status.HTTP_404_NOT_FOUND, data={"Course is not found"})
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess":"Course is not found"})
 
     @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')
     def change_status(self, request, pk=None):
@@ -407,12 +417,12 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
                 ## kiểm tra bằng hàm filter xem học sinh đã đăng ký khóa học này chưa
                 result = filter(lambda x: x.student == request.user and x.access == True, student_course)
                 if list(result):
-                    serializer = self.get_serializer(instance)
+                    serializer = DetailLessonSerializerRequestUser(instance,context={"request":request});
                     return Response(serializer.data)
                 else:
-                    return Response(status=status.HTTP_403_FORBIDDEN,data={"The lesson is in a course you haven't registered yet"})
-        except:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The lesson is in a course you haven't registered yet"})
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND,data={"mess":"No courses with id"+str(pk)})
 
     @action(methods=['post'], detail=True, url_path="add-video", url_name="add-video")
     def add_video(self, request, pk=None):
