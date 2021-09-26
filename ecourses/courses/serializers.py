@@ -169,9 +169,25 @@ class CourseSerializerRequestUser(ModelSerializer):
     rate = serializers.SerializerMethodField('rate_avg')
     tags = TagSerializer(many=True)
     user_review = serializers.SerializerMethodField('get_review_user')
+    complete_course = serializers.SerializerMethodField('complete')
     def rate_avg(self, course):
         point = course.student_join.aggregate(Avg('rate')) # trung bình điểm rating
         return point['rate__avg']
+    def complete(self,course):
+        request = self.context['request']
+        print(course.lessons.count())
+        if course.lessons.count() == 0:
+            return 0
+        else:
+            count_lesson = course.lessons.count()
+            count_lesson_complete = 0
+            lessons = course.lessons.all()
+            for lesson in lessons:
+                if lesson.lesson_student.filter(student=request.user).exists():
+                    if lesson.lesson_student.get(student=request.user).complete:
+                        count_lesson_complete = count_lesson_complete + 1
+            return round(count_lesson_complete/count_lesson*100,0)
+
     def get_review_user(self,course):
         request = self.context['request']
         try:
@@ -188,7 +204,7 @@ class CourseSerializerRequestUser(ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'name_course','category', 'subject', 'description','image', 'created_date', 'active', 'fee',
-                  'is_public', 'teacher', 'rate','tags','user_review']
+                  'is_public', 'teacher', 'rate','tags','user_review','complete_course']
 
 
 class CoursesItemSerializer(serializers.ModelSerializer):

@@ -117,7 +117,7 @@ class Student_Lesson(models.Model):
 
 class Video(models.Model):
 
-    subject =  models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
     url_video = models.CharField(max_length=255)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_video',
                                related_query_name='list_video_lesson')
@@ -131,6 +131,7 @@ class File(models.Model):
                                 related_query_name='list_file_lesson')
     def __str__(self):
         return self.subject
+
 class HomeWork(models.Model):
     author_teacher = models.ForeignKey(Teacher,on_delete=models.CASCADE,related_name='home_work')
     lesson = models.ForeignKey(Lesson,on_delete=models.CASCADE,related_name='home_work')
@@ -145,6 +146,7 @@ class GroupChat(models.Model):
     name_group = models.CharField(max_length=255,null=False)
     def __str__(self):
         return self.name_group
+
 class Message(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False)
     group_chat = models.ForeignKey(GroupChat,on_delete=models.CASCADE,null=False)

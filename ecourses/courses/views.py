@@ -13,9 +13,11 @@ from .serializers import *
 from .permissions import *
 from .models import *
 
+
 class AuthInfo(APIView):
     def get(self, request):
         return Response(settings.OAUTH2_INFO, status=status.HTTP_200_OK)
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -26,22 +28,24 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
 
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
-        return Response(self.serializer_class(request.user,context={"request": request}).data, status=status.HTTP_200_OK)
+        return Response(self.serializer_class(request.user, context={"request": request}).data,
+                        status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path="course", url_name='get-courses-registered')
     def get_courses_registered(self, request):
-        courses = Student_Course.objects.filter(student=request.user.id,access=True)
+        courses = Student_Course.objects.filter(student=request.user.id, access=True)
         list_course = []
         try:
             if courses is not None:
-                if(len(courses)>0):
+                if (len(courses) > 0):
                     for i in courses:
                         list_course.append(i.course)
                 else:
-                    return Response(status=status.HTTP_404_NOT_FOUND,data={"mess":"the user has not registered for any courses yet"})
+                    return Response(status=status.HTTP_404_NOT_FOUND,
+                                    data={"mess": "the user has not registered for any courses yet"})
             page = self.paginate_queryset(list_course)
             if page is not None:
-                serializer = CourseSerializer(page,many=True,context={"request": request})
+                serializer = CourseSerializerRequestUser(page, many=True, context={"request": request})
                 return self.get_paginated_response(serializer.data)
         except:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -53,7 +57,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
             u.is_active = False
             u.save()
             return Response(status=status.HTTP_200_OK, data="Successfully")
-        except: return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
 
     @action(methods=['post'], detail=False, url_path='change-password')
     def change_password(self, request):
@@ -74,23 +79,22 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed!")
 
-
     @action(methods=['get'], detail=False, url_path="follower", url_name="get-follower")
     def follower(self, request):
         try:
             u = User.objects.get(pk=request.user.id)
             flr = u.followers
-            return Response(status=status.HTTP_200_OK, data=InfoTeacherFollowedSerializer(flr, many=True, context={'request': request}).data)
+            return Response(status=status.HTTP_200_OK,
+                            data=InfoTeacherFollowedSerializer(flr, many=True, context={'request': request}).data)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
-
 
     @action(methods=['get'], detail=False, url_path="upgrade-user", url_name="upgrade-user")
     def upgrade_user(self, request):
         try:
             u = User.objects.get(pk=request.user.id)
             t = Teacher.objects.get_or_create(user=u)
-            if not(t[1]):
+            if not (t[1]):
                 return Response(status=status.HTTP_200_OK, data="User was an instructor account")
             t[0].save()
             return Response(status=status.HTTP_200_OK, data="Successfully")
@@ -104,7 +108,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
             teacher_id = request.data['teacher_id']
             t = Teacher.objects.get(user=teacher_id)
             if not t is not None:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any teacher pk = " +teacher_id)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any teacher pk = " + teacher_id)
             follow = Follow.objects.get_or_create(student=u, teacher=t)
             if not (follow[1]):
                 return Response(status=status.HTTP_200_OK, data="You already follow this account")
@@ -121,19 +125,22 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
             course_id = request.data['course_id']
             try:
                 course = Course.objects.get(pk=course_id)
-            except: return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + course_id)
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + course_id)
             try:
                 join = Student_Course.objects.get(student=u, course=course)
-            except: return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data="User has not join this course")
+            except:
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data="User has not join this course")
             point = request.data['rating_point']
-            if point <=5 and point >=0:
-                join.rate =point
+            if point <= 5 and point >= 0:
+                join.rate = point
                 join.save()
                 return Response(status=status.HTTP_200_OK, data="Access to course successfully")
-            else: return Response(status=status.HTTP_400_BAD_REQUEST, data="The rating points only accepts values from 0 to 5")
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data="The rating points only accepts values from 0 to 5")
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
-
 
     # def get_permissions(self):
     #     if self.action == 'get_current_user':
@@ -153,19 +160,21 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
         return Response(self.serializer_class(t, context={"request": request}).data,
                         status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=True, name='Get list Course', url_path='get-list-courses', url_name='get-list-courses', )
+    @action(methods=['get'], detail=True, name='Get list Course', url_path='get-list-courses',
+            url_name='get-list-courses', )
     def get_list_courses(self, request, pk=None):
         teacher = self.get_object()
-        c= teacher.course
-        return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, many=True, context={'request': request}).data)
+        c = teacher.course
+        return Response(status=status.HTTP_200_OK,
+                        data=CourseSerializer(c, many=True, context={'request': request}).data)
 
-    @action(methods=['post'],detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
+    @action(methods=['post'], detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
     def register_teacher(self, request):
         try:
             data = request.data
             user = User.objects.create_user(username=data['username'],
-                                       email=data['email'],
-                                       password=data['password'])
+                                            email=data['email'],
+                                            password=data['password'])
             user.set_password(data['password'])
             user.save()
             job = None
@@ -174,10 +183,10 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
                 job.save()
             teacher = Teacher.objects.create(user=user, job=job)
             teacher.save()
-        except : return Response(status=status.HTTP_400_BAD_REQUEST, data = "create failed")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="create failed")
 
         return Response(status=status.HTTP_201_CREATED, data=self.serializer_class(teacher).data)
-
 
 
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
@@ -186,7 +195,8 @@ class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIV
     pagination_class = BasePaginator
 
 
-class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView, generics.DestroyAPIView):
+class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView,
+                    generics.DestroyAPIView):
     queryset = Course.objects.all()
     query = Course.objects
     serializer_class = CourseSerializer
@@ -199,16 +209,17 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             queryset = self.query.get(pk=pk)
             serializer = CoursesItemSerializer(queryset, context={"request": request})
             return Response(serializer.data)
-        except: return Response(status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses',)
+    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses', )
     def hide_courses(self, request, pk=None):
         c = Course.objects.get(pk=pk)
         self.check_object_permissions(request, c)
         try:
             c.active = False
             c.save()
-        except :
+        except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
 
@@ -219,9 +230,10 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         try:
             c.active = True
             c.save()
-        except :
+        except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
+
     # Lấy bài học của khóa học.
     @action(methods=['get'], detail=True, name='lesson', url_path='lesson', url_name='lesson')
     def lesson(self, request, pk=None):
@@ -234,12 +246,14 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 lessons = lessons.filter(subject__icontains=kw)
             page = self.paginate_queryset(lessons)
             if page is not None:
-                serializer = LessonSerializer(page,many=True,context={"request":request})
-                return self.get_paginated_response(data={"info":CourseSerializer(Course.objects.get(pk=pk)).data,"list_lesson":serializer.data})
-        except: return Response(status=status.HTTP_404_NOT_FOUND,data={"Course is not found"})
+                serializer = LessonSerializer(page, many=True, context={"request": request})
+                return self.get_paginated_response(
+                    data={"info": CourseSerializer(Course.objects.get(pk=pk)).data, "list_lesson": serializer.data})
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"Course is not found"})
 
     @action(methods=['get'], detail=True, name='complete_lesson', url_path='complete', url_name='complete')
-    def complete_lesson(self,request, pk=None):
+    def complete_lesson(self, request, pk=None):
         self.pagination_class = LessonPaginator
         if Course.objects.get(pk=pk).teacher.user == request.user:
             return Response(status=status.HTTP_403_FORBIDDEN, data={"mess": "You are the creator of the course!"})
@@ -262,33 +276,37 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             if page is not None:
                 serializer = LessonSerializerRequestUser(page, many=True, context={"request": request})
                 return self.get_paginated_response(
-                    data={"info": CourseSerializerRequestUser(Course.objects.get(pk=pk),context={"request": request}).data, "list_lesson": serializer.data})
+                    data={"info": CourseSerializerRequestUser(Course.objects.get(pk=pk),
+                                                              context={"request": request}).data,
+                          "list_lesson": serializer.data})
         except:
-            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess":"Course is not found"})
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course is not found"})
 
     @action(methods=['get'], detail=True, url_path='change-status', url_name='change-status')
     def change_status(self, request, pk=None):
         c = Course.objects.get(pk=pk)
         self.check_object_permissions(request, c)
         try:
-            c.is_public = not(c.is_public)
+            c.is_public = not (c.is_public)
             c.save()
             return Response(status=status.HTTP_200_OK, data="Success")
-        except : return Response(status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['post'], detail=True, name='add tag', url_path='add-tag', url_name='add-tag')
     def add_tag(self, request, pk=None):
         try:
             c = Course.objects.get(pk=pk)
             self.check_object_permissions(request, c)
-        except :
+        except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             data = request.data['name']
             if data is not None:
-                c.tags.add(Tag.objects.get_or_create(name = data)[0])
+                c.tags.add(Tag.objects.get_or_create(name=data)[0])
             c.save()
-            return Response(status=status.HTTP_201_CREATED, data=CoursesItemSerializer(c, context={'request': request}).data)
+            return Response(status=status.HTTP_201_CREATED,
+                            data=CoursesItemSerializer(c, context={'request': request}).data)
 
     @action(methods=['get'], detail=True, url_path="access-course", url_name="access-course")
     def access_course(self, request, pk=None):
@@ -299,7 +317,8 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 teacher = course.teacher.user
                 if teacher == u:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data="Teacher id duplicate with student id")
-            except : return Response(status=status.HTTP_400_BAD_REQUEST, data="err")
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="err")
             if course is None:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + pk)
             access = Student_Course.objects.get_or_create(student=u, course=course)
@@ -315,14 +334,15 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
 
-    @action(methods=['get'], detail=True, name="Get students access to course", url_path="get-request", url_name="get-request")
+    @action(methods=['get'], detail=True, name="Get students access to course", url_path="get-request",
+            url_name="get-request")
     def get_request(self, request, pk=None):
         try:
             course = Course.objects.get(pk=pk)
             self.check_object_permissions(request, course)
             if not course is not None:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + pk)
-            student_course = Student_Course.objects.filter(course = course)
+            student_course = Student_Course.objects.filter(course=course)
             if not (student_course):
                 return Response(status=status.HTTP_200_OK, data="This course don't have student access to")
             listSt = []
@@ -347,16 +367,20 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         else:
             try:
                 student = User.objects.get(pk=request.data["student_id"])
-            except: return Response(status=status.HTTP_400_BAD_REQUEST, data="No student has pk =" + str(request.data["student_id"]))
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data="No student has pk =" + str(request.data["student_id"]))
             try:
                 student_course = Student_Course.objects.get(course=c, student=student)
-            except: return Response(status=status.HTTP_200_OK, data="This student don't access this course")
+            except:
+                return Response(status=status.HTTP_200_OK, data="This student don't access this course")
             student_course.delete()
 
             return Response(status=status.HTTP_201_CREATED,
                             data="Delete success")
 
-    @action(methods=['post'], detail=True, name='accept student join to private course', url_path='accept-student', url_name='accept-student')
+    @action(methods=['post'], detail=True, name='accept student join to private course', url_path='accept-student',
+            url_name='accept-student')
     def accept_student(self, request, pk=None):
         try:
             c = Course.objects.get(pk=pk)
@@ -396,13 +420,14 @@ class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.Retriev
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
 class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.DestroyAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [IsAuthenticated]
 
-## ghi đè lại lấy chi tiết bài học
+    ## ghi đè lại lấy chi tiết bài học
     def retrieve(self, request, pk=None):
         try:
             self.serializer_class = DetailLessonSerializer
@@ -417,12 +442,13 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
                 ## kiểm tra bằng hàm filter xem học sinh đã đăng ký khóa học này chưa
                 result = filter(lambda x: x.student == request.user and x.access == True, student_course)
                 if list(result):
-                    serializer = DetailLessonSerializerRequestUser(instance,context={"request":request});
+                    serializer = DetailLessonSerializerRequestUser(instance, context={"request": request});
                     return Response(serializer.data)
                 else:
-                    return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The lesson is in a course you haven't registered yet"})
+                    return Response(status=status.HTTP_403_FORBIDDEN,
+                                    data={"mess": "The lesson is in a course you haven't registered yet"})
         except ObjectDoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND,data={"mess":"No courses with id"+str(pk)})
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "No courses with id" + str(pk)})
 
     @action(methods=['post'], detail=True, url_path="add-video", url_name="add-video")
     def add_video(self, request, pk=None):
@@ -463,7 +489,6 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
             return Response(status=status.HTTP_200_OK, data="Successfully")
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
-
 
 
 class HomeWorkViewSet(viewsets.ViewSet):
@@ -509,8 +534,6 @@ class MessageViewSet(viewsets.ViewSet):
 class JoinViewSet(viewsets.ViewSet):
     queryset = Student_Course.objects.all()
     serializer_class = JoinSerializer
-
-
 
 
 def index(request):
