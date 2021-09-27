@@ -115,8 +115,8 @@ class Student_Lesson(models.Model):
         return str(self.student)+" complete "+str(self.lesson)
 
 
-class Video(models.Model):
-
+class Video(ModelBase):
+    author_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='video')
     subject = models.CharField(max_length=255)
     url_video = models.CharField(max_length=255)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_video',
@@ -124,7 +124,8 @@ class Video(models.Model):
     def __str__(self):
         return self.subject
 
-class File(models.Model):
+class File(ModelBase):
+    author_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='file')
     subject = models.CharField(max_length=255)
     file = models.FileField(upload_to='static/file/%Y/%m')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='list_file',
@@ -132,7 +133,7 @@ class File(models.Model):
     def __str__(self):
         return self.subject
 
-class HomeWork(models.Model):
+class HomeWork(ModelBase):
     author_teacher = models.ForeignKey(Teacher,on_delete=models.CASCADE,related_name='home_work')
     lesson = models.ForeignKey(Lesson,on_delete=models.CASCADE,related_name='home_work')
     subject = models.CharField(max_length=255)
