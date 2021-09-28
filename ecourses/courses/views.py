@@ -160,13 +160,21 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
         return Response(self.serializer_class(t, context={"request": request}).data,
                         status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=True, name='Get list Course', url_path='get-list-courses',
+    @action(methods=['get'], detail=False, name='Get list Course', url_path='get-list-courses',
             url_name='get-list-courses', )
     def get_list_courses(self, request, pk=None):
-        teacher = self.get_object()
+        teacher = Teacher.objects.get(pk=request.user.id)
         c = teacher.course
         return Response(status=status.HTTP_200_OK,
                         data=CourseSerializer(c, many=True, context={'request': request}).data)
+
+    # @action(methods=['get'], detail=False, name='Get list Course', url_path='get-list-courses',
+    #         url_name='get-list-courses', )
+    # def get_list_courses(self, request, pk=None):
+    #     teacher = self.get_object()
+    #     c = teacher.course
+    #     return Response(status=status.HTTP_200_OK,
+    #                     data=CourseSerializer(c, many=True, context={'request': request}).data)
 
     @action(methods=['post'], detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
     def register_teacher(self, request):
@@ -211,6 +219,25 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             return Response(serializer.data)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['post'], detail=False)
+    def create_Course(self, request):
+        try:
+            u = User.objects.get(pk=request.user.id)
+            t = Teacher.objects.get(user=u)
+            cate = Category.objects.get(pk=request.data['category_id'])
+            try:
+                c = Course.objects.create(is_public=request.data['is_public'],
+                                          fee=request.data['fee'],
+                                          teacher=t,
+                                          category=cate,
+                                          name_course=request.data['name_course'])
+                c.save()
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Info of course invalid!")
+            return Response(status=status.HTTP_201_CREATED, data="Created")
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
 
     @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses', )
     def hide_courses(self, request, pk=None):
