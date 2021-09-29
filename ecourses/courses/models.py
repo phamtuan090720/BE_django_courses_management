@@ -65,7 +65,7 @@ class Course(ModelBase):
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True)
     tags = models.ManyToManyField('Tag', blank=True,related_name='course')
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=False, related_name='course')
-    fee = models.CharField(default='Free', null=True, max_length=10) #free or not
+    fee = models.DecimalField(max_digits=5,decimal_places=2,null=False,default=0)
     is_public = models.BooleanField(default=True, null=False) #public or private
     image = models.ImageField(upload_to='static/courses/%Y/%m/',null=True, blank=True)
     # students = models.ManyToManyField('User',blank=True,related_name='course')

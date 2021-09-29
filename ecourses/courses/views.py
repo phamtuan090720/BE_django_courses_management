@@ -429,6 +429,50 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             student_course.save()
             return Response(status=status.HTTP_201_CREATED,
                             data="Accept student success")
+    @action(methods=["post"],detail=True,url_name="rating",url_path='rating')
+    def user_rating(self,request,pk=None):
+        self.pagination_class = [IsAuthenticated]
+        # kiểm tra có phải là giáo viên của khóa học
+        if self.get_object().teacher.user == request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"You are the creator of the course cannot be rate"})
+        # kiểm tra xem student đã join khóa học chưa
+        if self.get_object().student_join.filter(student=request.user):
+            #kiểm tra xem khóa học student đã được access vào khóa học hay chưa
+            if self.get_object().student_join.filter(student=request.user,access=True):
+                student_course = self.get_object().student_join.get(student=request.user)
+                # trường hợp khi khóa học không có bất cứ bài học nào.
+                if self.get_object().lessons.count() == 0:
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,data={"mess":"Lessons in the course are empty so the course cannot be rated."})
+                else:
+                    count_lesson = self.get_object().lessons.count()
+                    count_lesson_complete = 0
+                    lessons = self.get_object().lessons.all()
+                    for lesson in lessons:
+                        if lesson.lesson_student.filter(student=request.user).exists():
+                            if lesson.lesson_student.get(student=request.user).complete:
+                                count_lesson_complete = count_lesson_complete + 1
+                    course_complete = round(count_lesson_complete / count_lesson * 100, 0)
+                    # học viên phải hoàn thành trên 50% tổng số bài học thì mới được rating
+                    if course_complete >= 50:
+                        rate = request.data.get("rate")
+                        review = request.data.get("review")
+                        if rate is not None and review is not None:
+                            if int(rate) <= 5 and int(rate) >= 0:
+                                student_course.rate = rate
+                                student_course.review = review
+                                student_course.save()
+                                return Response(status=status.HTTP_201_CREATED, data="Successfully")
+                            else:
+                                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"The rating points only accepts values from 0 to 5"})
+                        else:
+                            return Response(status=status.HTTP_400_BAD_REQUEST,
+                                            data={"mess": "review and rate is not empty"})
+                    else:
+                        return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"You have not completed 50% of the course so you cannot rate the course"})
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN,data={""})
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The course has not been registered by you"})
 
 
 # def get_queryset(self):
@@ -513,9 +557,27 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
                                                author_teacher=request.user,
                                                lesson=lesson)
             homework.save()
-            return Response(status=status.HTTP_200_OK, data="Successfully")
+            return Response(status=status.HTTP_201_CREATED, data="Successfully")
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+    @action(methods=['post'],detail=True,url_path="complete-lesson",url_name="complete-lesson")
+    def complete_lesson(self,request,pk=None):
+        print(request.user)
+        ## check xem user có nằm trong khóa học được đăng ký hay không
+        if self.get_object().course.student_join.filter(student=request.user,access=True).exists():
+            lesson = self.get_object()
+            ## kiểm tra xem user đã hoàn thành bài học hay chưa
+            if lesson.lesson_student.filter(student=request.user).exists() == False:
+                complete = Student_Lesson.objects.create(lesson=lesson,student=request.user,complete=True)
+                complete.save()
+                return Response(status=status.HTTP_201_CREATED, data={"mess":"Successfully"})
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"You have completed the lesson"})
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The lesson is in a course you haven't registered yet"})
+
+
+
 
 
 class HomeWorkViewSet(viewsets.ViewSet):

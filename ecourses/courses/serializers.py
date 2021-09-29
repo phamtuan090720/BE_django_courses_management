@@ -175,7 +175,7 @@ class CourseSerializerRequestUser(ModelSerializer):
         return point['rate__avg']
     def complete(self,course):
         request = self.context['request']
-        print(course.lessons.count())
+        # print(course.lessons.count())
         if course.lessons.count() == 0:
             return 0
         else:
