@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.shortcuts import render
+# from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -221,25 +221,76 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['post'], detail=False)
-    def create_Course(self, request):
-        try:
-            u = User.objects.get(pk=request.user.id)
-            t = Teacher.objects.get(user=u)
-            cate = Category.objects.get(pk=request.data['category_id'])
-            try:
-                c = Course.objects.create(is_public=request.data['is_public'],
-                                          fee=request.data['fee'],
-                                          teacher=t,
-                                          category=cate,
-                                          name_course=request.data['name_course'])
-                c.save()
-            except:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Info of course invalid!")
-            return Response(status=status.HTTP_201_CREATED, data="Created")
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
+    def create_course(self, request):
+        # kiểm tra xem có phải là Teacher hay không
 
-    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses', )
+        print(Teacher.objects.filter(user=request.user).exists())
+        if Teacher.objects.filter(user=request.user).exists():
+            name_course = request.data.get('name_course')
+            category = request.data.get('category')
+            teacher = Teacher.objects.get(user=request.user)
+            fee = request.data.get('fee')
+            is_public = str(request.data.get('is_public')).title()
+            description = request.data.get('description')
+            subject = request.data.get('subject')
+            image = self.request.FILES.get('image')
+            # print("name_course",name_course)
+            # print("category", category)
+            # print("fee", fee)
+            # print("is_public", is_public)
+            # print("description", description)
+            # print("subject", subject)
+            # print("image", image)
+            if name_course is None or category is None or fee is None or is_public is None or image is None or \
+                    description is None or subject is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "name_course , category , fee ,image ,"
+                                                                                  "is_public ,description , subject"
+                                                                                  " can not be Null"})
+            else:
+                try:
+                    try:
+                        cate = Category.objects.get(pk=category)
+                    except ObjectDoesNotExist:
+                        return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "Don't have category with id "
+                                                                                          +
+                                                                                          str(category)})
+                    c = Course.objects.create(is_public=is_public,
+                                              fee=fee,
+                                              teacher=teacher,
+                                              category=cate,
+                                              name_course=name_course,
+                                              image=image,
+                                              description=description,
+                                              subject=subject
+                                              )
+                    c.save()
+                    return Response(status=status.HTTP_201_CREATED,
+                                    data={"mess": "The course has been created successfully"})
+                except:
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"mess": "Failed"})
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN,
+                            data={"mess": "You are not an Teacher, so you cannot take action create course"})
+
+        # try:
+        #     u = User.objects.get(pk=request.user.id)
+        #     t = Teacher.objects.get(user=u)
+        #     cate = Category.objects.get(pk=request.data['category_id'])
+        #     try:
+        #         c = Course.objects.create(is_public=request.data['is_public'],
+        #                                   fee=request.data['fee'],
+        #                                   teacher=t,
+        #                                   category=cate,
+        #                                   name_course=request.data['name_course'],
+        #                                   image=request.FILES['image'])
+        #         c.save()
+        #     except:
+        #         return Response(status=status.HTTP_400_BAD_REQUEST, data="Info of course invalid!")
+        #     return Response(status=status.HTTP_201_CREATED, data="Created")
+        # except:
+        #     return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
+
+    @action(methods=['get'], detail=True, name='Hide this courses', url_path='hide-courses', url_name='hide-courses')
     def hide_courses(self, request, pk=None):
         c = Course.objects.get(pk=pk)
         self.check_object_permissions(request, c)
@@ -271,6 +322,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             kw = request.query_params.get('kw')
             if kw is not None:
                 lessons = lessons.filter(subject__icontains=kw)
+
             page = self.paginate_queryset(lessons)
             if page is not None:
                 serializer = LessonSerializer(page, many=True, context={"request": request})
@@ -429,20 +481,23 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             student_course.save()
             return Response(status=status.HTTP_201_CREATED,
                             data="Accept student success")
-    @action(methods=["post"],detail=True,url_name="rating",url_path='rating')
-    def user_rating(self,request,pk=None):
+
+    @action(methods=["post"], detail=True, url_name="rating", url_path='rating')
+    def user_rating(self, request, pk=None):
         self.pagination_class = [IsAuthenticated]
         # kiểm tra có phải là giáo viên của khóa học
         if self.get_object().teacher.user == request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"You are the creator of the course cannot be rate"})
+            return Response(status=status.HTTP_403_FORBIDDEN,
+                            data={"mess": "You are the creator of the course cannot be rate"})
         # kiểm tra xem student đã join khóa học chưa
         if self.get_object().student_join.filter(student=request.user):
-            #kiểm tra xem khóa học student đã được access vào khóa học hay chưa
-            if self.get_object().student_join.filter(student=request.user,access=True):
+            # kiểm tra xem khóa học student đã được access vào khóa học hay chưa
+            if self.get_object().student_join.filter(student=request.user, access=True):
                 student_course = self.get_object().student_join.get(student=request.user)
                 # trường hợp khi khóa học không có bất cứ bài học nào.
                 if self.get_object().lessons.count() == 0:
-                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,data={"mess":"Lessons in the course are empty so the course cannot be rated."})
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    data={"mess": "Lessons in the course are empty so the course cannot be rated."})
                 else:
                     count_lesson = self.get_object().lessons.count()
                     count_lesson_complete = 0
@@ -463,16 +518,19 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                                 student_course.save()
                                 return Response(status=status.HTTP_201_CREATED, data="Successfully")
                             else:
-                                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"The rating points only accepts values from 0 to 5"})
+                                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                                data={"mess": "The rating points only accepts values from 0 to 5"})
                         else:
                             return Response(status=status.HTTP_400_BAD_REQUEST,
                                             data={"mess": "review and rate is not empty"})
                     else:
-                        return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"You have not completed 50% of the course so you cannot rate the course"})
+                        return Response(status=status.HTTP_403_FORBIDDEN, data={
+                            "mess": "You have not completed 50% of the course so you cannot rate the course"})
             else:
-                return Response(status=status.HTTP_403_FORBIDDEN,data={""})
+                return Response(status=status.HTTP_403_FORBIDDEN, data={""})
         else:
-            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The course has not been registered by you"})
+            return Response(status=status.HTTP_403_FORBIDDEN,
+                            data={"mess": "The course has not been registered by you"})
 
 
 # def get_queryset(self):
@@ -560,24 +618,23 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
             return Response(status=status.HTTP_201_CREATED, data="Successfully")
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
-    @action(methods=['post'],detail=True,url_path="complete-lesson",url_name="complete-lesson")
-    def complete_lesson(self,request,pk=None):
+
+    @action(methods=['post'], detail=True, url_path="complete-lesson", url_name="complete-lesson")
+    def complete_lesson(self, request, pk=None):
         print(request.user)
         ## check xem user có nằm trong khóa học được đăng ký hay không
-        if self.get_object().course.student_join.filter(student=request.user,access=True).exists():
+        if self.get_object().course.student_join.filter(student=request.user, access=True).exists():
             lesson = self.get_object()
             ## kiểm tra xem user đã hoàn thành bài học hay chưa
             if lesson.lesson_student.filter(student=request.user).exists() == False:
-                complete = Student_Lesson.objects.create(lesson=lesson,student=request.user,complete=True)
+                complete = Student_Lesson.objects.create(lesson=lesson, student=request.user, complete=True)
                 complete.save()
-                return Response(status=status.HTTP_201_CREATED, data={"mess":"Successfully"})
+                return Response(status=status.HTTP_201_CREATED, data={"mess": "Successfully"})
             else:
-                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"You have completed the lesson"})
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "You have completed the lesson"})
         else:
-            return Response(status=status.HTTP_403_FORBIDDEN,data={"mess":"The lesson is in a course you haven't registered yet"})
-
-
-
+            return Response(status=status.HTTP_403_FORBIDDEN,
+                            data={"mess": "The lesson is in a course you haven't registered yet"})
 
 
 class HomeWorkViewSet(viewsets.ViewSet):

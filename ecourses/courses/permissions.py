@@ -16,7 +16,7 @@ class CoursePermission(BasePermission):
             return request.user.is_authenticated
         elif view.action in ['hide_courses', 'open_courses', 'change_status', 'add_tag', 'delete_student', 'accept_student'] \
                 or request.method in ['PUT', 'PATCH', 'DELETE']:
-            return obj.teacher.activeTeacher and  obj.teacher.user == request.user
+            return obj.teacher.activeTeacher and obj.teacher.user == request.user
 
 class UserPermission(BasePermission):
     def has_permission(self, request, view):
