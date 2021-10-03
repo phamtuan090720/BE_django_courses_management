@@ -118,6 +118,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed, Please check the request again')
 
     # điều kiện để rating?
+    # api chưa sài
     @action(methods=['post'], detail=False, url_path="rating", url_name="rating")
     def rating(self, request):
         try:
@@ -163,10 +164,22 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     @action(methods=['get'], detail=False, name='Get list Course', url_path='get-list-courses',
             url_name='get-list-courses', )
     def get_list_courses(self, request, pk=None):
-        teacher = Teacher.objects.get(pk=request.user.id)
-        c = teacher.course
-        return Response(status=status.HTTP_200_OK,
-                        data=CourseSerializer(c, many=True, context={'request': request}).data)
+        self.pagination_class = CoursesPanigatior
+        # kiểm tra xem user có phải là teacher hay ko
+        if Teacher.objects.filter(user=request.user).exists():
+            teacher = Teacher.objects.get(user=request.user)
+
+            c = teacher.course.order_by('-created_date')
+            kw = request.query_params.get('kw')
+
+            if kw is not None:
+                c = c.filter(name_course__icontains=kw)
+
+            page = self.paginate_queryset(c)
+            serializer = CourseSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"mess": "You are not Teacher"})
 
     # @action(methods=['get'], detail=False, name='Get list Course', url_path='get-list-courses',
     #         url_name='get-list-courses', )
@@ -205,20 +218,20 @@ class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIV
 
 class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView,
                     generics.DestroyAPIView):
-    queryset = Course.objects.all()
+    queryset = Course.objects.filter(active=True)
     query = Course.objects
     serializer_class = CourseSerializer
     pagination_class = BasePaginator
-    # parser_classes = [MultiPartParser, ]
+    parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [CoursePermission]
 
     def retrieve(self, request, pk=None):
         try:
-            queryset = self.query.get(pk=pk)
+            queryset = self.query.get(pk=pk, active=True)
             serializer = CoursesItemSerializer(queryset, context={"request": request})
             return Response(serializer.data)
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course Not Found"})
 
     @action(methods=['post'], detail=False)
     def create_course(self, request):
@@ -234,18 +247,14 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             description = request.data.get('description')
             subject = request.data.get('subject')
             image = self.request.FILES.get('image')
-            # print("name_course",name_course)
-            # print("category", category)
-            # print("fee", fee)
-            # print("is_public", is_public)
-            # print("description", description)
-            # print("subject", subject)
-            # print("image", image)
+            tags = request.data.get('tags')
+            print(tags)
             if name_course is None or category is None or fee is None or is_public is None or image is None or \
                     description is None or subject is None:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "name_course , category , fee ,image ,"
-                                                                                  "is_public ,description , subject"
-                                                                                  " can not be Null"})
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data={"mess": "name_course , category , fee ,image ,"
+                                              "is_public ,description , subject"
+                                              " can not be Null"})
             else:
                 try:
                     try:
@@ -372,17 +381,24 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    # add tags vào khóa học
     @action(methods=['post'], detail=True, name='add tag', url_path='add-tag', url_name='add-tag')
     def add_tag(self, request, pk=None):
         try:
             c = Course.objects.get(pk=pk)
             self.check_object_permissions(request, c)
+
         except:
+
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            data = request.data['name']
-            if data is not None:
-                c.tags.add(Tag.objects.get_or_create(name=data)[0])
+            tags = request.data.get("tags")
+            listTag = []
+            if tags is not None:
+                for tag in tags:
+                    t, _ = Tag.objects.get_or_create(name=tag)
+                    listTag.append(t)
+            c.tags.set(listTag)
             c.save()
             return Response(status=status.HTTP_201_CREATED,
                             data=CoursesItemSerializer(c, context={'request': request}).data)
@@ -531,6 +547,16 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         else:
             return Response(status=status.HTTP_403_FORBIDDEN,
                             data={"mess": "The course has not been registered by you"})
+
+    # Dùng để xem thông tin chi tiết Khóa Học để teacher có thể chỉnh sửa chúng.
+
+    @action(methods=['get'], detail=True, url_path='detail-course-teacher', url_name='detail-course-teacher')
+    def get_detail_course_teacher(self, request, pk=None):
+        try:
+            c = Course.objects.get(pk=pk)
+            return Response(status=status.HTTP_200_OK, data=CourseSerializer(c, context={'request': request}).data)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course Not Found"})
 
 
 # def get_queryset(self):
