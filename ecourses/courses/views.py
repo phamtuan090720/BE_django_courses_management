@@ -218,12 +218,14 @@ class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIV
 
 class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView,
                     generics.DestroyAPIView):
-    queryset = Course.objects.filter(active=True)
+    queryset = Course.objects.all()
     query = Course.objects
     serializer_class = CourseSerializer
     pagination_class = BasePaginator
     parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [CoursePermission]
+
+
 
     def retrieve(self, request, pk=None):
         try:
@@ -232,6 +234,17 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             return Response(serializer.data)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course Not Found"})
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset().filter(active=True))
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(methods=['post'], detail=False)
     def create_course(self, request):
