@@ -87,7 +87,6 @@ class LessonSerializer(ModelSerializer):
 
 class LessonSerializerRequestUser(ModelSerializer):
     complete = serializers.SerializerMethodField('student_complete')
-
     def student_complete(self,lesson):
         request = self.context['request']
         try:
@@ -127,10 +126,11 @@ class DetailLessonSerializer(ModelSerializer):
     home_work = HomeWorkSerializer(many=True)
     class Meta:
         model = Lesson
-        fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active',"list_video","list_file","home_work"]
+        fields = ['id', 'subject', 'image','created_date', 'updated_date', 'content','course','active',"list_video",
+                  "list_file","home_work"]
 
 class LessonField(ModelSerializer):
-    list_video = serializers.SlugRelatedField(many=True ,read_only=True, slug_field='subject')
+    list_video = serializers.SlugRelatedField(many=True,read_only=True, slug_field='subject')
     class Meta:
         model = Lesson
         fields = [ 'subject', 'image', 'list_video']
@@ -179,7 +179,7 @@ class CourseSerializerRequestUser(ModelSerializer):
         if course.lessons.count() == 0:
             return 0
         else:
-            count_lesson = course.lessons.count()
+            count_lesson = course.lessons.filter(active=True).count()
             count_lesson_complete = 0
             lessons = course.lessons.all()
             for lesson in lessons:

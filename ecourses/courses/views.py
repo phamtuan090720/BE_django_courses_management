@@ -340,7 +340,10 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         self.pagination_class = LessonPaginator
         try:
             ## sắp xếp theo ngày tạo mới nhất và active = True
-            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
+            if Course.objects.get(pk=pk).teacher.user == request.user:
+                lessons = Course.objects.get(pk=pk).lessons.all().order_by('-created_date')
+            else:
+                lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
             kw = request.query_params.get('kw')
             if kw is not None:
                 lessons = lessons.filter(subject__icontains=kw)
@@ -524,11 +527,11 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             if self.get_object().student_join.filter(student=request.user, access=True):
                 student_course = self.get_object().student_join.get(student=request.user)
                 # trường hợp khi khóa học không có bất cứ bài học nào.
-                if self.get_object().lessons.count() == 0:
+                if self.get_object().lessons.filter(active=True).count() == 0:
                     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                     data={"mess": "Lessons in the course are empty so the course cannot be rated."})
                 else:
-                    count_lesson = self.get_object().lessons.count()
+                    count_lesson = self.get_object().lessons.filter(active=True).count()
                     count_lesson_complete = 0
                     lessons = self.get_object().lessons.all()
                     for lesson in lessons:
@@ -571,6 +574,22 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         except:
             return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course Not Found"})
 
+    @action(methods=['post'],detail=True,url_path='add-lesson',url_name='add-lesson')
+    def add_lesson(self,request,pk=None):
+        try:
+            content = request.data.get('content')
+            subject = request.data.get('subject')
+            if self.get_object().lessons.filter(subject=subject).exists():
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"Subject has been duplicated"})
+            if content is not None and subject is not None:
+                lesson = Lesson.objects.create(content=content,subject=subject,course=self.get_object())
+                lesson.save()
+                return Response(status = status.HTTP_201_CREATED,data={"mess":"Successfully"})
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"subject or content is required"})
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"Add lesson failed"})
+
 
 # def get_queryset(self):
 #         queryset = Course.objects.all()
@@ -589,7 +608,7 @@ class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.Retriev
     serializer_class = CategorySerializer
 
 
-class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.DestroyAPIView):
+class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.DestroyAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, JSONParser]
@@ -606,15 +625,20 @@ class LessonViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPI
                 serializer = self.get_serializer(instance)
                 return Response(serializer.data)
             else:
-                student_course = Student_Course.objects.filter(course=instance.course)
-                ## kiểm tra bằng hàm filter xem học sinh đã đăng ký khóa học này chưa
-                result = filter(lambda x: x.student == request.user and x.access == True, student_course)
-                if list(result):
-                    serializer = DetailLessonSerializerRequestUser(instance, context={"request": request});
-                    return Response(serializer.data)
+                instance = self.get_object()
+                print(instance.active)
+                if instance.active:
+                    student_course = Student_Course.objects.filter(course=instance.course)
+                    ## kiểm tra bằng hàm filter xem học sinh đã đăng ký khóa học này chưa
+                    result = filter(lambda x: x.student == request.user and x.access == True, student_course)
+                    if list(result):
+                        serializer = DetailLessonSerializerRequestUser(instance, context={"request": request});
+                        return Response(serializer.data)
+                    else:
+                        return Response(status=status.HTTP_403_FORBIDDEN,
+                                        data={"mess": "The lesson is in a course you haven't registered yet"})
                 else:
-                    return Response(status=status.HTTP_403_FORBIDDEN,
-                                    data={"mess": "The lesson is in a course you haven't registered yet"})
+                    return Response(status=status.HTTP_404_NOT_FOUND,data={"mess":"Not Found"})
         except ObjectDoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "No courses with id" + str(pk)})
 
