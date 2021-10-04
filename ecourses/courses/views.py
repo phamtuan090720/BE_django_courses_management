@@ -608,7 +608,7 @@ class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.Retriev
     serializer_class = CategorySerializer
 
 
-class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.DestroyAPIView):
+class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, JSONParser]
