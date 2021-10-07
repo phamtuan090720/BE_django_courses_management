@@ -82,7 +82,6 @@ class Course(ModelBase):
     fee = models.DecimalField(max_digits=5, decimal_places=2, null=False, default=0)
     is_public = models.BooleanField(default=True, null=False)  # public or private
     image = models.ImageField(upload_to='static/courses/%Y/%m/', null=True, blank=True)
-
     # students = models.ManyToManyField('User',blank=True,related_name='course')
     def __str__(self):
         return self.name_course

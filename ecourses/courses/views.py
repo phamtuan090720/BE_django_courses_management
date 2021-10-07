@@ -7,8 +7,12 @@ from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
+from datetime import date,datetime
+from django.conf import settings
+from django.utils.timezone import make_aware
 from .paginator import *
 from .serializers import *
 from .permissions import *
@@ -66,6 +70,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Failed")
 
+    ## check lại hàm này
     @action(methods=['post'], detail=False, url_path='change-password')
     def change_password(self, request):
         try:
@@ -172,7 +177,7 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     def get_list_courses(self, request, pk=None):
         self.pagination_class = CoursesPanigatior
         # kiểm tra xem user có phải là teacher hay ko
-        if Teacher.objects.filter(user=request.user).exists():
+        if Teacher.objects.filter(user=request.user,activeTeacher=True).exists():
             teacher = Teacher.objects.get(user=request.user)
 
             c = teacher.course.order_by('-created_date')
@@ -197,24 +202,39 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
 
     @action(methods=['post'], detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
     def register_teacher(self, request):
+        data = request.data
+        print(data)
+        user = request.user
+        if data.get('first_name') is not None:
+            user.first_name = data.get('first_name')
+        if data.get('last_name') is not None:
+            user.last_name = data.get('last_name')
+        if data.get('email') is not None:
+            user.email = data.get('email')
+        user.save()
+        job = None
+        if data.get('job') is not None:
+            job = Job.objects.get_or_create(name_job=data.get('job'))[0]
+        teacher = Teacher.objects.get_or_create(user=user)[0]
+        teacher.job = job
+        skills = data.get('skills')
+        list_skill = []
+        if skills is not None:
+            for skill in skills:
+                s, _ = Skill.objects.get_or_create(name_skill=skill)
+                list_skill.append(s)
+        teacher.skills.set(list_skill)
+        teacher.save()
+        return Response(status=status.HTTP_201_CREATED,data="Your registration as an instructor has been received"
+                                                            ", please wait for our review later")
+    @action(methods=['get'],detail=False,url_name='check-active-teacher',url_path='check-active-teacher')
+    def check_active_teacher(self,request):
         try:
-            data = request.data
-            user = User.objects.create_user(username=data['username'],
-                                            email=data['email'],
-                                            password=data['password'])
-            user.set_password(data['password'])
-            user.save()
-            job = None
-            if data['job'] is not None:
-                job = Job.objects.get_or_create(name_job=data['job'])[0]
-                job.save()
-            teacher = Teacher.objects.create(user=user, job=job)
-            teacher.save()
+            teacher = Teacher.objects.get(user=request.user)
+            print(teacher)
+            return Response(status=status.HTTP_200_OK,data={'access':teacher.activeTeacher})
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="create failed")
-
-        return Response(status=status.HTTP_201_CREATED, data=self.serializer_class(teacher).data)
-
+            return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"You are not registered as an instructor"})
 
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
     queryset = Tag.objects.all()
@@ -293,7 +313,8 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                     return Response(status=status.HTTP_201_CREATED,
                                     data={"mess": "The course has been created successfully"})
                 except IntegrityError:
-                    return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "You have created a course named" + str(name_course)})
+                    return Response(status=status.HTTP_400_BAD_REQUEST,
+                                    data={"mess": "You have created a course named" + str(name_course)})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN,
                             data={"mess": "You are not an Teacher, so you cannot take action create course"})
@@ -499,7 +520,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
     def accept_student(self, request, pk=None):
         try:
             c = Course.objects.get(pk=pk)
-            teacher = User.objects.get(pk=request.user.id)
+            # teacher = User.objects.get(pk=request.user.id)
             self.check_object_permissions(request, c)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any course pk = " + pk)
@@ -514,9 +535,12 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             except:
                 return Response(status=status.HTTP_200_OK, data="This student don't access this course")
             student_course.access = True
+            naive_datetime = datetime.now()
+            aware_datetime = make_aware(naive_datetime)
+            student_course.join_date = aware_datetime
             student_course.save()
             return Response(status=status.HTTP_201_CREATED,
-                            data="Accept student success")
+                            data={"mess":"Accept student success"})
 
     @action(methods=["post"], detail=True, url_name="rating", url_path='rating')
     def user_rating(self, request, pk=None):
@@ -593,7 +617,20 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "subject or content is required"})
         except IntegrityError:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "Lesson "+str(subject)+" Duplicate is course"})
+            return Response(status=status.HTTP_400_BAD_REQUEST,
+                            data={"mess": "Lesson " + str(subject) + " Duplicate is course"})
+
+    @action(methods=['get'], detail=True, url_path='get-student-course', url_name='get-student-course')
+    def get_student_course(self, request, pk=None):
+        self.check_object_permissions(request, self.get_object())
+        list_student_accessed = self.get_object().student_join.filter(access=True)
+        list_student_pending_access = self.get_object().student_join.filter(access=False)
+        # print(list_student_accessed)
+        # print(list_student_pending_access)
+        return Response(status=status.HTTP_200_OK, data=StudentInCourseSerializer(self.get_object(),
+                                                                         context=dict(request=request,
+                                                            list_student_accessed=list_student_accessed,
+                                                            list_student_pending_access=list_student_pending_access)).data)
 
 
 # def get_queryset(self):
@@ -659,7 +696,7 @@ class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.Destroy
             video = Video.objects.create(url_video=url, subject=subject,
                                          author_teacher=Teacher.objects.get(pk=request.user), lesson=lesson)
             video.save()
-            return Response(status=status.HTTP_200_OK, data={"mess":"Successfully"})
+            return Response(status=status.HTTP_200_OK, data={"mess": "Successfully"})
         except IntegrityError:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={
                 "mess": "Subject :" + str(subject) + " is Duplicate in Lesson " + str(self.get_object().subject)})
@@ -677,7 +714,7 @@ class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.Destroy
             file = File.objects.create(file=file, subject=subject,
                                        author_teacher=author_teacher, lesson=lesson)
             file.save()
-            return Response(status=status.HTTP_200_OK, data={"mess":"Successfully"})
+            return Response(status=status.HTTP_200_OK, data={"mess": "Successfully"})
         except IntegrityError:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={
                 "mess": "Subject :" + str(subject) + " is Duplicate in Lesson " + str(self.get_object().subject)})
@@ -708,7 +745,7 @@ class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.Destroy
                                                 author_teacher=author_teacher,
                                                 lesson=lesson)
             home_work.save()
-            return Response(status=status.HTTP_200_OK, data={"mess":"Successfully"})
+            return Response(status=status.HTTP_200_OK, data={"mess": "Successfully"})
         except IntegrityError:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={
                 "mess": "Subject :" + str(subject) + " is Duplicate in Lesson " + str(self.get_object().subject)})
@@ -743,7 +780,7 @@ class LessonViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.Destroy
                             data={"mess": "The lesson is in a course you haven't registered yet"})
 
 
-class HomeWorkViewSet(viewsets.ViewSet,generics.DestroyAPIView, generics.UpdateAPIView):
+class HomeWorkViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = HomeWork.objects.all()
     serializer_class = HomeWorkSerializer
     permission_classes = [OwnerPermission]
@@ -755,7 +792,7 @@ class FileViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAPIV
     permission_classes = [OwnerPermission]
 
 
-class VideoViewSet(viewsets.ViewSet,generics.DestroyAPIView, generics.UpdateAPIView):
+class VideoViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = [OwnerPermission]

@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = 'django-insecure-&*nh!3yfwwf4w-e$k#1v$$1d^_x^5gw85a2f6qjez%_w=!2k+q
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -46,10 +44,10 @@ INSTALLED_APPS = [
 
 ]
 REST_FRAMEWORK = {
-'DEFAULT_AUTHENTICATION_CLASSES': [
-    'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-    # 'rest_framework.authentication.BasicAuthentication',
-    'rest_framework.authentication.SessionAuthentication',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        # 'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ]
 }
 
@@ -63,7 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'debug_toolbar.middleware.DebugToolbarMiddleware', #tat truoc khi trien khai len he thong
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  # tat truoc khi trien khai len he thong
 ]
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -91,7 +89,7 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 INTERNAL_IPS = [
-'127.0.0.1'
+    '127.0.0.1'
 ]
 
 OAUTH2_INFO = {
@@ -125,7 +123,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecourses.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -133,9 +130,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecoursedb',
-        'USER':'root',
-        'PASSWORD':'123456',
-        'HOST':''
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': ''
     }
 }
 AUTH_USER_MODEL = 'courses.User'
@@ -148,6 +145,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 6,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -157,20 +157,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

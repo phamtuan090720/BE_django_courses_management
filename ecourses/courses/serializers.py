@@ -1,8 +1,9 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
+import django.contrib.auth.password_validation as validators
 
 
 class UserSerializer(ModelSerializer):
@@ -25,11 +26,27 @@ class UserSerializer(ModelSerializer):
             'password': {'write_only': 'true'},
         }
 
+    def validate_password(self, data):
+        errors = dict()
+        try:
+            validators.validate_password(password=data)
+        except ValidationError as e:
+            errors = list(e.messages)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return super(UserSerializer, self).validate(data)
+
     def create(self, validated_data):
-        user = User(**validated_data)
+        user = User.objects.create_user(**validated_data)
         user.set_password(validated_data['password'])
         user.save()
+        return user
 
+    def update(self, instance, validated_data):
+        user = super().update(instance, validated_data)
+        if 'password' in validated_data:
+            user.set_password(validated_data['password'])
+            user.save()
         return user
 
 
@@ -283,6 +300,61 @@ class CoursesItemSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'name_course', 'category', 'subject', 'description', 'image', 'created_date', 'active', 'fee',
                   'is_public', 'updated_date', 'lessons', 'tags', 'teacher', 'student', 'rate', 'student_join']
+
+
+class InfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'avatar', 'username']
+
+
+class InfoStudentInCourseSerializer(serializers.ModelSerializer):
+    info_student = serializers.SerializerMethodField('get_info')
+    complete_course = serializers.SerializerMethodField('get_complete_course')
+
+    def get_complete_course(self, st):
+        # print(st.course.lessons.count())
+        course = st.course
+        student = st.student
+        if course.lessons.count() == 0:
+            return 0
+        else:
+            count_lesson = course.lessons.filter(active=True).count()
+            # print('count_lesson',count_lesson)
+            count_lesson_complete = 0
+            lessons = course.lessons.all()
+            for lesson in lessons:
+                if lesson.lesson_student.filter(student=student).exists():
+                    if lesson.lesson_student.get(student=student).complete:
+                        count_lesson_complete = count_lesson_complete + 1
+            return round(count_lesson_complete / count_lesson * 100, 0)
+
+    def get_info(self, st):
+        request = self.context['request']
+        return InfoSerializer(st.student, context={"request": request}).data
+
+    class Meta:
+        model = Student_Course
+        fields = ['id', 'join_date', 'rate', 'review', 'info_student', 'complete_course']
+
+
+class StudentInCourseSerializer(serializers.ModelSerializer):
+    list_student_accessed = serializers.SerializerMethodField('get_list_student_accessed')
+    list_student_pending_access = serializers.SerializerMethodField('get_list_student_pending_access')
+
+    def get_list_student_accessed(self, course):
+        request = self.context['request']
+        list_student_accessed = self.context.get('list_student_accessed')
+        return InfoStudentInCourseSerializer(list_student_accessed, many=True, context={'request': request}).data
+
+    def get_list_student_pending_access(self, course):
+        list_student_pending_access = self.context.get('list_student_pending_access')
+        request = self.context['request']
+        return InfoStudentInCourseSerializer(list_student_pending_access, many=True, context={'request': request}).data
+
+    class Meta:
+        model = Course
+        fields = ['list_student_accessed', 'list_student_pending_access']
 
 
 # class HomeWorkSerializer(ModelSerializer):

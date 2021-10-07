@@ -15,7 +15,7 @@ class CoursePermission(BasePermission):
         elif view.action in ['user_rating']:
             return request.user.is_authenticated
         elif view.action in ['hide_courses', 'open_courses', 'change_status', 'add_tag', 'delete_student',
-                             'accept_student', 'add_lesson'] or request.method in ['PUT', 'PATCH', 'DELETE']:
+                             'accept_student', 'add_lesson','get_student_course'] or request.method in ['PUT', 'PATCH', 'DELETE']:
             return obj.teacher.activeTeacher and obj.teacher.user == request.user
 
 
@@ -63,4 +63,4 @@ class TeacherPermission(BasePermission):
         if request.user.is_superuser:
             return True
         elif view.action == 'get_list_courses' or request.method in ['PUT', 'PATCH']:
-            return obj.activeTeacher and obj.user == request.user
+            return request.user.is_authenticated and obj.activeTeacher and obj.user == request.user
