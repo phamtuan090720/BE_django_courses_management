@@ -248,12 +248,12 @@ class CourseSerializerRequestUser(ModelSerializer):
     def complete(self, course):
         request = self.context['request']
         # print(course.lessons.count())
-        if course.lessons.count() == 0:
+        if course.lessons.filter(active=True).count() == 0:
             return 0
         else:
             count_lesson = course.lessons.filter(active=True).count()
             count_lesson_complete = 0
-            lessons = course.lessons.all()
+            lessons = course.lessons.filter(active=True).all()
             for lesson in lessons:
                 if lesson.lesson_student.filter(student=request.user).exists():
                     if lesson.lesson_student.get(student=request.user).complete:
@@ -316,13 +316,13 @@ class InfoStudentInCourseSerializer(serializers.ModelSerializer):
         # print(st.course.lessons.count())
         course = st.course
         student = st.student
-        if course.lessons.count() == 0:
+        if course.lessons.filter(active=True).count() == 0:
             return 0
         else:
             count_lesson = course.lessons.filter(active=True).count()
             # print('count_lesson',count_lesson)
             count_lesson_complete = 0
-            lessons = course.lessons.all()
+            lessons = course.lessons.filter(active=True).all()
             for lesson in lessons:
                 if lesson.lesson_student.filter(student=student).exists():
                     if lesson.lesson_student.get(student=student).complete:

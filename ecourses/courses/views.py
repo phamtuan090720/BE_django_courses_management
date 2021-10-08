@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
-from datetime import date,datetime
+from datetime import date, datetime
 from django.conf import settings
 from django.utils.timezone import make_aware
 from .paginator import *
@@ -39,7 +39,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
     @action(methods=['get'], detail=False, url_path="course", url_name='get-courses-registered')
     def get_courses_registered(self, request):
         courses = Student_Course.objects.filter(student=request.user.id, access=True)
-        print(courses[0].course)
         list_course = []
         try:
             if courses.exists():
@@ -177,7 +176,7 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     def get_list_courses(self, request, pk=None):
         self.pagination_class = CoursesPanigatior
         # kiểm tra xem user có phải là teacher hay ko
-        if Teacher.objects.filter(user=request.user,activeTeacher=True).exists():
+        if Teacher.objects.filter(user=request.user, activeTeacher=True).exists():
             teacher = Teacher.objects.get(user=request.user)
 
             c = teacher.course.order_by('-created_date')
@@ -212,29 +211,33 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
         if data.get('email') is not None:
             user.email = data.get('email')
         user.save()
-        job = None
+        # job = None
+        teacher = Teacher.objects.get_or_create(user=user)[0]
         if data.get('job') is not None:
             job = Job.objects.get_or_create(name_job=data.get('job'))[0]
-        teacher = Teacher.objects.get_or_create(user=user)[0]
-        teacher.job = job
+            teacher.job = job
         skills = data.get('skills')
-        list_skill = []
+
         if skills is not None:
+            list_skill = []
             for skill in skills:
                 s, _ = Skill.objects.get_or_create(name_skill=skill)
                 list_skill.append(s)
-        teacher.skills.set(list_skill)
+            teacher.skills.set(list_skill)
         teacher.save()
-        return Response(status=status.HTTP_201_CREATED,data="Your registration as an instructor has been received"
-                                                            ", please wait for our review later")
-    @action(methods=['get'],detail=False,url_name='check-active-teacher',url_path='check-active-teacher')
-    def check_active_teacher(self,request):
+        return Response(status=status.HTTP_201_CREATED, data="Your registration as an instructor has been received"
+                                                             ", please wait for our review later")
+
+    @action(methods=['get'], detail=False, url_name='check-active-teacher', url_path='check-active-teacher')
+    def check_active_teacher(self, request):
         try:
             teacher = Teacher.objects.get(user=request.user)
             print(teacher)
-            return Response(status=status.HTTP_200_OK,data={'access':teacher.activeTeacher})
+            return Response(status=status.HTTP_200_OK, data={'access': teacher.activeTeacher})
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST,data={"mess":"You are not registered as an instructor"})
+            return Response(status=status.HTTP_400_BAD_REQUEST,
+                            data={"mess": "You are not registered as an instructor"})
+
 
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
     queryset = Tag.objects.all()
@@ -540,7 +543,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             student_course.join_date = aware_datetime
             student_course.save()
             return Response(status=status.HTTP_201_CREATED,
-                            data={"mess":"Accept student success"})
+                            data={"mess": "Accept student success"})
 
     @action(methods=["post"], detail=True, url_name="rating", url_path='rating')
     def user_rating(self, request, pk=None):
@@ -628,9 +631,9 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
         # print(list_student_accessed)
         # print(list_student_pending_access)
         return Response(status=status.HTTP_200_OK, data=StudentInCourseSerializer(self.get_object(),
-                                                                         context=dict(request=request,
-                                                            list_student_accessed=list_student_accessed,
-                                                            list_student_pending_access=list_student_pending_access)).data)
+                                                                                  context=dict(request=request,
+                                                                                               list_student_accessed=list_student_accessed,
+                                                                                               list_student_pending_access=list_student_pending_access)).data)
 
 
 # def get_queryset(self):

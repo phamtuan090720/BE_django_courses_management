@@ -40,7 +40,6 @@ class Teacher(models.Model):
 class Follow(models.Model):
     class Meta:
         unique_together = ('student', 'teacher')
-
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='followers')
 
