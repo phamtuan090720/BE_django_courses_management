@@ -1,3 +1,4 @@
+import json
 from django.conf import settings
 # from django.shortcuts import render
 from rest_framework.decorators import action
@@ -167,9 +168,12 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
 
     @action(methods=['get'], detail=False, url_path="current-teacher", url_name='get-current-teacher')
     def get_current_user(self, request):
-        t = Teacher.objects.get(pk=request.user.id)
-        return Response(self.serializer_class(t, context={"request": request}).data,
-                        status=status.HTTP_200_OK)
+        try:
+            t = Teacher.objects.get(pk=request.user.id)
+            return Response(self.serializer_class(t, context={"request": request}).data,
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"mess": "You are not a teacher"})
 
     @action(methods=['get'], detail=False, name='Get list Course', url_path='get-list-courses',
             url_name='get-list-courses', )
@@ -228,6 +232,27 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
         return Response(status=status.HTTP_201_CREATED, data="Your registration as an instructor has been received"
                                                              ", please wait for our review later")
 
+    @action(methods=['post'], detail=False, url_path='change-profile', url_name='change-profile')
+    def change_profile(self, request, pk=None):
+        try:
+            data = request.data
+            user = request.user
+            teacher = Teacher.objects.get(user=user)
+            if data.get('job') is not None:
+                job = Job.objects.get_or_create(name_job=data.get('job'))[0]
+                teacher.job = job
+            skills = data.get('skills')
+            if skills is not None:
+                list_skill = []
+                for skill in skills:
+                    s, _ = Skill.objects.get_or_create(name_skill=skill)
+                    list_skill.append(s)
+                teacher.skills.set(list_skill)
+            teacher.save()
+            return Response(status=status.HTTP_201_CREATED, data={"mess": "Change profile success"})
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"mess": "You are not a Teacher"})
+
     @action(methods=['get'], detail=False, url_name='check-active-teacher', url_path='check-active-teacher')
     def check_active_teacher(self, request):
         try:
@@ -263,8 +288,29 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
             return Response(status=status.HTTP_404_NOT_FOUND, data={"mess": "Course Not Found"})
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset().filter(active=True))
-
+        queryset = self.filter_queryset(self.get_queryset().filter(active=True)).order_by('-id')
+        kw = self.request.query_params.get('kw', None)
+        category = self.request.query_params.get('category', None)
+        public = self.request.query_params.get('public', None)
+        fee = self.request.query_params.get('fee', None)
+        rate = self.request.query_params.get('rate', None)
+        if kw:
+            queryset = queryset.filter(name_course__icontains=kw)
+        if category:
+            queryset = queryset.filter(category_id=category)
+        if public:
+            public = json.loads(public)
+            queryset = queryset.filter(is_public=public)
+        if fee:
+            decimal_val = float(fee)
+            print(decimal_val)
+            if decimal_val == float(0):
+                queryset = queryset.filter(fee=decimal_val)
+            else:
+                queryset = queryset.filter(fee__gte=decimal_val)
+        # print(queryset.filter(avg_rate=None))
+        if rate:
+            queryset = queryset.annotate(rate_avg=Avg('student_join__rate')).filter(rate_avg__gt=rate)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -564,7 +610,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 else:
                     count_lesson = self.get_object().lessons.filter(active=True).count()
                     count_lesson_complete = 0
-                    lessons = self.get_object().lessons.all()
+                    lessons = self.get_object().filter(active=True).lessons.all()
                     for lesson in lessons:
                         if lesson.lesson_student.filter(student=request.user).exists():
                             if lesson.lesson_student.get(student=request.user).complete:
@@ -634,6 +680,32 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                                                                                   context=dict(request=request,
                                                                                                list_student_accessed=list_student_accessed,
                                                                                                list_student_pending_access=list_student_pending_access)).data)
+
+    @action(methods=['get'], detail=True, url_name='statistics', url_path='statistics')
+    def statistics(self, request, pk=None):
+        student_join_course = []
+        query_set = self.get_object().student_join.filter(join_date__day=8)
+        print(query_set)
+        switcher = {
+            1: 'January',
+            2: 'February',
+            3: 'March',
+            4: 'April',
+            5: 'May',
+            6: 'June',
+            7: 'July',
+            8: 'August',
+            9: 'September',
+            10: "October",
+            11: 'November',
+            12: 'December'
+        }
+        # for m in range(1, 13):
+        #     item = {
+        #        switcher.get(m):query_set.filter(join_date__month=m)
+        #     }
+
+        return Response(status=status.HTTP_200_OK)
 
 
 # def get_queryset(self):
