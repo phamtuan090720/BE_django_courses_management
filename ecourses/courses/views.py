@@ -1,6 +1,7 @@
 import json
 from django.conf import settings
 # from django.shortcuts import render
+from django.db.models import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +10,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
 from datetime import date, datetime
@@ -262,6 +264,19 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST,
                             data={"mess": "You are not registered as an instructor"})
+
+    @action(methods=['get'], detail=False, url_name='statistics', url_path='statistics')
+    def statistics(self, request):
+        try:
+            teacher = Teacher.objects.get(pk=self.request.user)
+            teacher_course = Course.objects.filter(teacher=teacher).annotate(rate_avg=Avg('student_join__rate'))\
+                .annotate(count_student=Count('student_join__student'))\
+                .order_by('-rate_avg').values('name_course', 'count_student','rate_avg')
+            print(teacher_course)
+            return Response(status=status.HTTP_200_OK, data={"statistics_course": teacher_course})
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN, data="You are not a Teacher")
+
 
 
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
@@ -683,29 +698,36 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
 
     @action(methods=['get'], detail=True, url_name='statistics', url_path='statistics')
     def statistics(self, request, pk=None):
-        student_join_course = []
-        query_set = self.get_object().student_join.filter(join_date__day=8)
-        print(query_set)
-        switcher = {
-            1: 'January',
-            2: 'February',
-            3: 'March',
-            4: 'April',
-            5: 'May',
-            6: 'June',
-            7: 'July',
-            8: 'August',
-            9: 'September',
-            10: "October",
-            11: 'November',
-            12: 'December'
-        }
-        # for m in range(1, 13):
-        #     item = {
-        #        switcher.get(m):query_set.filter(join_date__month=m)
-        #     }
+        try:
+            student_join_course = dict()
+            student_rate_course = dict()
+            query = Student_Course.objects.filter(course=pk)
 
-        return Response(status=status.HTTP_200_OK)
+            print(query.filter(join_date__month=10))
+            switcher = {
+                1: 'January',
+                2: 'February',
+                3: 'March',
+                4: 'April',
+                5: 'May',
+                6: 'June',
+                7: 'July',
+                8: 'August',
+                9: 'September',
+                10: "October",
+                11: 'November',
+                12: 'December'
+            }
+
+            for m in range(1, 13):
+                student_join_course[switcher.get(m)] = query.filter(join_date__month=m).count()
+
+            for rate in range(1, 6):
+                student_rate_course["rate " + str(rate)] = query.filter(rate=rate).count()
+            return Response(status=status.HTTP_200_OK, data={"student_join_course": student_join_course
+                , "student_rate_course": student_rate_course})
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "course not found"})
 
 
 # def get_queryset(self):
