@@ -625,7 +625,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 else:
                     count_lesson = self.get_object().lessons.filter(active=True).count()
                     count_lesson_complete = 0
-                    lessons = self.get_object().filter(active=True).lessons.all()
+                    lessons = self.get_object().lessons.filter(active=True).all()
                     for lesson in lessons:
                         if lesson.lesson_student.filter(student=request.user).exists():
                             if lesson.lesson_student.get(student=request.user).complete:
