@@ -20,6 +20,9 @@ from .paginator import *
 from .serializers import *
 from .permissions import *
 from .models import *
+from random import random
+from django.core.mail import send_mail
+from django.conf.global_settings import EMAIL_HOST_USER
 
 
 class AuthInfo(APIView):
@@ -33,6 +36,30 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
     parser_classes = [MultiPartParser, JSONParser]
     permission_classes = [UserPermission]
     pagination_class = UserPaginator
+
+    @action(methods=['post'], detail=False, url_path='reset-password', url_name='reset-password')
+    def reset_password(self, request):
+        data = request.data
+        username = data.get('username')
+        email = data.get('email')
+        if username is not None and email is not None:
+            user = User.objects.filter(username=username, email=email)
+            if user.exists():
+                u = User.objects.get(username=username, email=email)
+                password = 'reset@123'
+                u.set_password(password)
+                u.save()
+                subject = 'Reset pasword TTdemy'
+                message = 'Your password has been reset,Password : ' + password
+                send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+                return Response(status=status.HTTP_200_OK, data={'mess': "Your password has been reset, "
+                                                                         "please check your email to get your password"})
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND, data={'mess': 'Cannot find user with username: '
+                                                                                + str(username) + ' and email: '
+                                                                                + str(email) + ' in the system'})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'mess': 'username and email required'})
 
     @action(methods=['get'], detail=False, url_path="current-user", url_name='get-current-user')
     def get_current_user(self, request):
@@ -79,11 +106,11 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
             try:
                 u = User.objects.get(pk=request.user.id)
             except:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="get!")
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="user not found")
             try:
                 u.set_password(request.data['password'])
             except:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="change!")
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="failed")
             try:
                 u.save()
             except:
@@ -269,14 +296,13 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     def statistics(self, request):
         try:
             teacher = Teacher.objects.get(pk=self.request.user)
-            teacher_course = Course.objects.filter(teacher=teacher).annotate(rate_avg=Avg('student_join__rate'))\
-                .annotate(count_student=Count('student_join__student'))\
-                .order_by('-rate_avg').values('name_course', 'count_student','rate_avg')
+            teacher_course = Course.objects.filter(teacher=teacher).annotate(rate_avg=Avg('student_join__rate')) \
+                .annotate(count_student=Count('student_join__student')) \
+                .order_by('-rate_avg').values('name_course', 'count_student', 'rate_avg')
             print(teacher_course)
             return Response(status=status.HTTP_200_OK, data={"statistics_course": teacher_course})
         except:
             return Response(status=status.HTTP_403_FORBIDDEN, data="You are not a Teacher")
-
 
 
 class TagViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
