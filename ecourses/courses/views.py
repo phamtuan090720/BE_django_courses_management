@@ -159,29 +159,29 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
 
     # điều kiện để rating?
     # api chưa sài
-    @action(methods=['post'], detail=False, url_path="rating", url_name="rating")
-    def rating(self, request):
-        try:
-            u = User.objects.get(pk=request.user.id)
-            course_id = request.data['course_id']
-            try:
-                course = Course.objects.get(pk=course_id)
-            except:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + course_id)
-            try:
-                join = Student_Course.objects.get(student=u, course=course)
-            except:
-                return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data="User has not join this course")
-            point = request.data['rating_point']
-            if point <= 5 and point >= 0:
-                join.rate = point
-                join.save()
-                return Response(status=status.HTTP_200_OK, data="Access to course successfully")
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST,
-                                data="The rating points only accepts values from 0 to 5")
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
+    # @action(methods=['post'], detail=False, url_path="rating", url_name="rating")
+    # def rating(self, request):
+    #     try:
+    #         u = User.objects.get(pk=request.user.id)
+    #         course_id = request.data['course_id']
+    #         try:
+    #             course = Course.objects.get(pk=course_id)
+    #         except:
+    #             return Response(status=status.HTTP_400_BAD_REQUEST, data="Don't have any cousrse pk = " + course_id)
+    #         try:
+    #             join = Student_Course.objects.get(student=u, course=course)
+    #         except:
+    #             return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data="User has not join this course")
+    #         point = request.data['rating_point']
+    #         if point <= 5 and point >= 0:
+    #             join.rate = point
+    #             join.save()
+    #             return Response(status=status.HTTP_200_OK, data="Access to course successfully")
+    #         else:
+    #             return Response(status=status.HTTP_400_BAD_REQUEST,
+    #                             data="The rating points only accepts values from 0 to 5")
+    #     except:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST, data='Failed')
 
     # def get_permissions(self):
     #     if self.action == 'get_current_user':
@@ -235,7 +235,6 @@ class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
     @action(methods=['post'], detail=False, name='teacher', url_path='register-teacher', url_name='register-teacher')
     def register_teacher(self, request):
         data = request.data
-        print(data)
         user = request.user
         if data.get('first_name') is not None:
             user.first_name = data.get('first_name')
@@ -487,7 +486,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                             data={"mess": "You have not registered for the course"})
         try:
             ## sắp xếp theo ngày tạo mới nhất và active = True
-            lessons = Course.objects.get(pk=pk).lessons.filter(active=True).order_by('-created_date')
+            lessons = Course.objects.get(pk=pk,active=True).lessons.filter(active=True).order_by('-created_date')
             kw = request.query_params.get('kw')
             if kw is not None:
                 lessons = lessons.filter(subject__icontains=kw)
@@ -754,18 +753,6 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVi
                 , "student_rate_course": student_rate_course})
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={"mess": "course not found"})
-
-
-# def get_queryset(self):
-#         queryset = Course.objects.all()
-#         cate_id = self.request.query_params.get('category_id', None)
-#         kw = self.request.query_params.get('kw', None)
-#
-#         if cate_id:
-#             queryset = queryset.filter(category=cate_id)
-#         if kw:
-#             queryset = queryset.filter(description__icontains=kw)
-#         return queryset
 
 
 class CategoryViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
