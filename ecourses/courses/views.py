@@ -1,6 +1,4 @@
 import json
-from django.conf import settings
-# from django.shortcuts import render
 from django.db.models import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,8 +7,6 @@ from django.http import HttpResponse, Http404
 from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.views import APIView
-from django.utils import timezone
-from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
 from datetime import date, datetime
@@ -20,7 +16,6 @@ from .paginator import *
 from .serializers import *
 from .permissions import *
 from .models import *
-from random import random
 from django.core.mail import send_mail
 from django.conf.global_settings import EMAIL_HOST_USER
 
