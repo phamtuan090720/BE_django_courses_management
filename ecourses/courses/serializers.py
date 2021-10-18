@@ -218,7 +218,7 @@ class TeacherField(ModelSerializer):
 
 
 class CourseSerializer(ModelSerializer):
-    category_name = serializers.SerializerMethodField('get_categoryname')
+    category_name = serializers.SerializerMethodField('get_category_name')
     teacher = TeacherField(read_only=True)
     rate = serializers.SerializerMethodField('rate_avg')
     tags = TagSerializer(many=True)
@@ -226,13 +226,14 @@ class CourseSerializer(ModelSerializer):
     def rate_avg(self, course):
         point = course.student_join.aggregate(Avg('rate'))  # trung bình điểm rating
         return point['rate__avg']
-    def get_categoryname(self,course):
+
+    def get_category_name(self, course):
         return str(Category.objects.get(pk=course.category.id).name)
 
     class Meta:
         model = Course
         fields = ['id', 'name_course', 'category', 'subject', 'description', 'image', 'created_date', 'active', 'fee',
-                  'is_public', 'teacher', 'rate', 'tags','category_name']
+                  'is_public', 'teacher', 'rate', 'tags', 'category_name']
 
 
 class CourseSerializerRequestUser(ModelSerializer):
