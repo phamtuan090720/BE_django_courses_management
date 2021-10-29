@@ -1,5 +1,4 @@
-# BE_django_courses_management
-First Header | Second Header
------------- | -------------
-Content from cell 1 | Content from cell 2
-Content in the first column | Content in the second column
+# Đồ Án Ngành Công Nghệ Thông Tin Hệ Thống Học Tập Online
+Đồ án này được thực hiện bởi **Phạm Tuân** và **Nguyễn Phương Thu Thủy**.
+
+
